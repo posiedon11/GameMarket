@@ -31,7 +31,7 @@ namespace OpenXBL_namespace
         static XblAPI* instance;
 
         //constructors
-        XblAPI();
+        XblAPI(){};
         ~XblAPI() {};
 
         XblAPI(const XblAPI&) = delete;
