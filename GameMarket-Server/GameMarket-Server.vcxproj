@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="APIManager.cpp" />
+    <ClCompile Include="SteamAPIManager.cpp" />
     <ClCompile Include="Tables.cpp" />
     <ClCompile Include="DataBaseManager.cpp" />
     <ClCompile Include="GameMarketSettings.cpp" />
@@ -148,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="APIManager.h" />
+    <ClInclude Include="SteamAPIManager.h" />
     <ClInclude Include="Tables.h" />
     <ClInclude Include="DataBaseManager.h" />
     <ClInclude Include="GameMarketSettings.h" />

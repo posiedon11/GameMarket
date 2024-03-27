@@ -8,16 +8,36 @@
 
 namespace tables_namespace
 {
+
+	enum class CRUD {
+		Insert,
+		Update,
+		Delete,
+		Select,
+		UpSert
+	};
 	enum class Tables {
+		//xbox
 		XboxUserProfiles,
 		XboxGameTitles,
 		XboxGameBundles,
-		XboxGameDetails,
+		XboxProductIds,
 		XboxTitleDetails,
 		XboxMarketDetails,
 		XboxGameGenres,
-		SteamGames,
-		SteamGameGenres
+		XboxGroupData,
+		//steam
+		SteamAppIDs,
+		SteamAppDetails,
+		SteamAppDevelopers,
+		SteamAppPublishers,
+		SteamPackages,
+		SteamPackageDetails,
+		SteamPackageIDs,
+		SteamAppPlatforms,
+		SteamAppGenres
+
+		//other
 	};
 
 	struct TableData
@@ -43,7 +63,10 @@ namespace tables_namespace
 
 		void outputData();
 	};
-
+	struct XboxProfileData : public TableData {
+		string xuid;
+		
+	};
 	struct XboxTitleDetailsData : public TableData
 	{
 		string titleID, productID;
@@ -60,6 +83,31 @@ namespace tables_namespace
 
 
 		void outputData();
+	};
+
+	struct XboxUpdateScannedData : public TableData
+	{
+		string ID;
+	};
+	struct XboxProductGroupData: public TableData
+	{
+		string groupID, groupName, productID, titleID;
+	};
+
+
+	struct SteamAPPListData : public TableData
+	{
+		string name;
+		uint32_t appid;
+
+		void outputData();
+	};
+	struct SteamAppDetailsData : public TableData
+	{
+		string name, type;
+		vector<uint32_t> dlc, packages;
+		vector<string> developters, publishers, platforms, genres;
+		uint32_t appid;
 	};
 
 

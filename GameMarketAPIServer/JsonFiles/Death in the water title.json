@@ -1,0 +1,2533 @@
+{
+  "BigIds": [
+    "9P20J0WQMRZJ"
+  ],
+  "HasMorePages": false,
+  "Products": [
+    {
+      "LastModifiedDate": "2023-12-11T10:34:17.9298537Z",
+      "LocalizedProperties": [
+        {
+          "DeveloperName": "Lighthouse Games Studio",
+          "PublisherName": "Lighthouse Games Studio",
+          "PublisherAddress": null,
+          "PublisherWebsiteUri": "http://www.facebook.com/LighthouseGames",
+          "SupportUri": "",
+          "SupportPhone": null,
+          "EligibilityProperties": {
+            "Remediations": [
+              {
+                "RemediationId": "9ZH7BH6P9RM7",
+                "Description": "Go Gold today to take advantage of exclusive Xbox discounts, special deals, and offers."
+              }
+            ],
+            "Affirmations": []
+          },
+          "Franchises": [],
+          "Images": [
+            {
+              "FileId": "2000000000048587401",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 9195,
+              "ForegroundColor": "",
+              "Height": 50,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "ckveQXE14uuO49woP5RJhd7G287wh9db6N9b24+qILc=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.19314.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.ea4bcc78-4834-42e4-ac38-0d7ffb852df6",
+              "Width": 50
+            },
+            {
+              "FileId": "2000000000048587402",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 128991,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "StNgLK58wflBUhKU8oDeDrgToRujFBEKrutiomw2Lgw=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.54090.14497198776715613.bd93bca1-ff5d-484c-a3b4-45a20242bc53.64cd9b58-193f-4b43-97ec-acfee4cb44bf",
+              "Width": 300
+            },
+            {
+              "FileId": "2000000000048587368",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 16585,
+              "ForegroundColor": "",
+              "Height": 88,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "DxBalE3o3VjZb5KezvhUQsqaUZ/HaZID+nTvVprSu88=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.4111.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.70c25342-0a12-4ea4-8e18-db96629cc92a",
+              "Width": 88
+            },
+            {
+              "FileId": "2000000000048587369",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 182035,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "8mSoVR2mx/AEsfCTOdk/hBk++4aIivsfj2pFCRaj3aU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.25842.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.5417676e-d9ef-41f2-aaa3-e04ba9c018f8",
+              "Width": 620
+            },
+            {
+              "FileId": "2000000000043736523",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 1618268,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "SuperHeroArt",
+              "UnscaledImageSHA256Hash": "80cymXRhmcXikCJ9YqXkNUC9Y1k66cBpynxKBassiag=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.18419.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.ae74508e-b26d-4f9d-97af-87a111973b01",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000044000837",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 12149888,
+              "ForegroundColor": "",
+              "Height": 2160,
+              "ImagePositionInfo": "Xbox/2",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "zrnPhWd0UlfHRh+2MroyGh/L1GRJa/MXb6VJU63BTIQ=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.47566.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.30274407-c32c-4890-a8f3-c09f6982c84c",
+              "Width": 3840
+            },
+            {
+              "FileId": "2000000000044000839",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 11874502,
+              "ForegroundColor": "",
+              "Height": 2160,
+              "ImagePositionInfo": "Xbox/3",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "x43F8R0S35Vcq5+rJpeDAZzS2gSo76UpgjhSn32XF4o=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.36295.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.e64b99aa-0067-4084-9ba6-da35aef131a8",
+              "Width": 3840
+            },
+            {
+              "FileId": "2000000000044000717",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 12844761,
+              "ForegroundColor": "",
+              "Height": 2160,
+              "ImagePositionInfo": "Xbox/0",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "aCWsRAyt2redQ+BZUC+tW0PO7UzC8sKdQB8P/i+Ta40=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.9576.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.e16b9c03-6570-47d7-b8c3-4991e2681e5c",
+              "Width": 3840
+            },
+            {
+              "FileId": "2000000000044000832",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 14601355,
+              "ForegroundColor": "",
+              "Height": 2160,
+              "ImagePositionInfo": "Xbox/1",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "uHT7rupbXfpTfssh2PcGbQ6BAhbrTttzKi9Sw+zgZJc=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.29880.14497198776715613.eafe2924-a4b5-4f32-ad38-8e194fb91600.bf93b92a-0344-4933-afe5-c88eeba4f396",
+              "Width": 3840
+            },
+            {
+              "FileId": "2000000000047579917",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 1771317,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "TitledHeroArt",
+              "UnscaledImageSHA256Hash": "kp/ulozBIgba+aZaF6VNS+HAAq50MXH54i4MdlmihNw=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.40850.14497198776715613.bd93bca1-ff5d-484c-a3b4-45a20242bc53.b284b183-5971-4ef2-b19b-8ec9ea80db55",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000049871362",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 913351,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Poster",
+              "UnscaledImageSHA256Hash": "cWyHarKmQVWXc7JXdHUSd25P1iDYKj3Cnw+CJhYmqjU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.27761.14497198776715613.2cd3492a-203a-434c-8572-680a2c67a8ed.7584ffd7-007b-4ed1-b6fc-1f72175a7826",
+              "Width": 720
+            },
+            {
+              "FileId": "2000000000051346173",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 1363426,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "FeaturePromotionalSquareArt",
+              "UnscaledImageSHA256Hash": "PNf2QLt26x8HL9T15aQaH2ZLzVIMLXogSDPCrF4rpkI=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.55100.14497198776715613.c429c835-7dde-44b0-96fe-1b66c236e5bb.ed20bae7-48ae-46af-aaf2-b6ed56ef16ef",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000051346410",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 613243,
+              "ForegroundColor": "",
+              "Height": 800,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "BrandedKeyArt",
+              "UnscaledImageSHA256Hash": "DIZu6MVL6qUh+YXNWK3apQsrmZ/qBYmJTjjN1ADyhnI=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.34316.14497198776715613.c429c835-7dde-44b0-96fe-1b66c236e5bb.a6029733-dcd0-42be-aa80-0f4e335f9b7f",
+              "Width": 584
+            },
+            {
+              "FileId": "2000000000051345961",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 1336648,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "BoxArt",
+              "UnscaledImageSHA256Hash": "B5zN5WEBZduYPYj6CYTEIxYSYccfeOhq3xzQBzNCPQU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.39943.14497198776715613.c429c835-7dde-44b0-96fe-1b66c236e5bb.76ad64b1-2ae6-49cb-ab66-6bdcc14ca333",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000051345983",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "transparent",
+              "Caption": "",
+              "FileSizeInBytes": 149454,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "wGMEKzuPaB4/si4+uYwci1Az6KKcUMNo2D7YDt3nA2k=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.25536.14497198776715613.c429c835-7dde-44b0-96fe-1b66c236e5bb.ac31f7ca-8aa2-4f76-9e32-672502884018",
+              "Width": 300
+            }
+          ],
+          "Videos": [
+            {
+              "Uri": "http://universalstore.streaming.mediaservices.windows.net/02ae763b-6256-4cfa-b616-b69f79186e31/2c19148e-3479-4839-bf90-cff2d41e.ism/manifest",
+              "VideoPurpose": "HeroTrailer",
+              "Height": 1080,
+              "Width": 1920,
+              "AudioEncoding": "",
+              "VideoEncoding": "avc1",
+              "VideoPositionInfo": "Video/0",
+              "Caption": "Dead in the Water Gameplay",
+              "FileSizeInBytes": 30212115,
+              "PreviewImage": {
+                "FileId": "2000000000047579980",
+                "EISListingIdentifier": null,
+                "BackgroundColor": null,
+                "Caption": "Dead in the Water Gameplay",
+                "FileSizeInBytes": 1771317,
+                "ForegroundColor": null,
+                "Height": 1080,
+                "ImagePositionInfo": null,
+                "ImagePurpose": "trailer",
+                "UnscaledImageSHA256Hash": "ItA5dttqJYsLlt7SquuW7aHVl+QllUNYPpa41AK09Ys=",
+                "Uri": "//store-images.s-microsoft.com/image/apps.53282.14497198776715613.80779fb6-484f-4ff3-8d6f-3a53c6e9f4bc.f60344fb-de95-4d41-be33-f18d50271794",
+                "Width": 1920
+              },
+              "TrailerId": null,
+              "SortOrder": 1
+            }
+          ],
+          "ProductDescription": "How long will you survive in this open water diving experience as you go head to head with terrifying Great Whites as they threaten to tear you apart!",
+          "ProductTitle": "Death in the Water",
+          "ShortTitle": "Death in the Water",
+          "SortTitle": "Death in the Water",
+          "FriendlyTitle": null,
+          "ShortDescription": "How long will you survive in this open water diving experience as you go head to head with terrifying Great Whites as they threaten to tear you apart!",
+          "SearchTitles": [
+            {
+              "SearchTitleString": "Shark",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Great White",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Killer",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Hunt",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Underwater",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Sea",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "Survival",
+              "SearchTitleType": "SearchHint"
+            }
+          ],
+          "VoiceTitle": "Death in the Water",
+          "RenderGroupDetails": null,
+          "ProductDisplayRanks": [],
+          "InteractiveModelConfig": null,
+          "Interactive3DEnabled": false,
+          "Language": "en-us",
+          "Markets": [
+            "US",
+            "DZ",
+            "AR",
+            "AU",
+            "AT",
+            "BH",
+            "BD",
+            "BE",
+            "BR",
+            "BG",
+            "CA",
+            "CL",
+            "CN",
+            "CO",
+            "CR",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EG",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "GT",
+            "HK",
+            "HU",
+            "IS",
+            "IN",
+            "ID",
+            "IQ",
+            "IE",
+            "IL",
+            "IT",
+            "JP",
+            "JO",
+            "KZ",
+            "KE",
+            "KW",
+            "LV",
+            "LB",
+            "LI",
+            "LT",
+            "LU",
+            "MY",
+            "MT",
+            "MR",
+            "MX",
+            "MA",
+            "NL",
+            "NZ",
+            "NG",
+            "NO",
+            "OM",
+            "PK",
+            "PE",
+            "PH",
+            "PL",
+            "PT",
+            "QA",
+            "RO",
+            "RU",
+            "SA",
+            "RS",
+            "SG",
+            "SK",
+            "SI",
+            "ZA",
+            "KR",
+            "ES",
+            "SE",
+            "CH",
+            "TW",
+            "TH",
+            "TT",
+            "TN",
+            "TR",
+            "UA",
+            "AE",
+            "GB",
+            "VN",
+            "YE",
+            "LY",
+            "LK",
+            "UY",
+            "VE",
+            "AF",
+            "AX",
+            "AL",
+            "AS",
+            "AO",
+            "AI",
+            "AQ",
+            "AG",
+            "AM",
+            "AW",
+            "BO",
+            "BQ",
+            "BA",
+            "BW",
+            "BV",
+            "IO",
+            "BN",
+            "BF",
+            "BI",
+            "KH",
+            "CM",
+            "CV",
+            "KY",
+            "CF",
+            "TD",
+            "TL",
+            "DJ",
+            "DM",
+            "DO",
+            "EC",
+            "SV",
+            "GQ",
+            "ER",
+            "ET",
+            "FK",
+            "FO",
+            "FJ",
+            "GF",
+            "PF",
+            "TF",
+            "GA",
+            "GM",
+            "GE",
+            "GH",
+            "GI",
+            "GL",
+            "GD",
+            "GP",
+            "GU",
+            "GG",
+            "GN",
+            "GW",
+            "GY",
+            "HT",
+            "HM",
+            "HN",
+            "AZ",
+            "BS",
+            "BB",
+            "BY",
+            "BZ",
+            "BJ",
+            "BM",
+            "BT",
+            "KM",
+            "CG",
+            "CD",
+            "CK",
+            "CX",
+            "CC",
+            "CI",
+            "CW",
+            "JM",
+            "SJ",
+            "JE",
+            "KI",
+            "KG",
+            "LA",
+            "LS",
+            "LR",
+            "MO",
+            "MK",
+            "MG",
+            "MW",
+            "IM",
+            "MH",
+            "MQ",
+            "MU",
+            "YT",
+            "FM",
+            "MD",
+            "MN",
+            "MS",
+            "MZ",
+            "MM",
+            "NA",
+            "NR",
+            "NP",
+            "MV",
+            "ML",
+            "NC",
+            "NI",
+            "NE",
+            "NU",
+            "NF",
+            "PW",
+            "PS",
+            "PA",
+            "PG",
+            "PY",
+            "RE",
+            "RW",
+            "BL",
+            "MF",
+            "WS",
+            "ST",
+            "SN",
+            "MP",
+            "PN",
+            "SX",
+            "SB",
+            "SO",
+            "SC",
+            "SL",
+            "GS",
+            "SH",
+            "KN",
+            "LC",
+            "PM",
+            "VC",
+            "TJ",
+            "TZ",
+            "TG",
+            "TK",
+            "TO",
+            "TM",
+            "TC",
+            "TV",
+            "UM",
+            "UG",
+            "VI",
+            "VG",
+            "WF",
+            "EH",
+            "ZM",
+            "ZW",
+            "UZ",
+            "VU",
+            "SR",
+            "SZ",
+            "AD",
+            "MC",
+            "SM",
+            "ME",
+            "VA",
+            "NEUTRAL"
+          ]
+        }
+      ],
+      "MarketProperties": [
+        {
+          "OriginalReleaseDate": "2019-09-11T01:31:29.5876055Z",
+          "MinimumUserAge": 16,
+          "ContentRatings": [
+            {
+              "RatingSystem": "ESRB",
+              "RatingId": "ESRB:T",
+              "RatingDescriptors": [
+                "ESRB:Vio",
+                "ESRB:Blo"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "PEGI",
+              "RatingId": "PEGI:16",
+              "RatingDescriptors": [
+                "PEGI:StrVio"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "DJCTQ",
+              "RatingId": "DJCTQ:14",
+              "RatingDescriptors": [
+                "DJCTQ:Vio"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "USK",
+              "RatingId": "USK:16",
+              "RatingDescriptors": [
+                "USK:Vio",
+                "USK:ShoHor"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "IARC",
+              "RatingId": "IARC:16",
+              "RatingDescriptors": [
+                "IARC:StrVio"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "COB-AU",
+              "RatingId": "COB-AU:MA",
+              "RatingDescriptors": [
+                "COB-AU:StrVio",
+                "COB-AU:StrHorThe"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "GRB",
+              "RatingId": "GRB:12",
+              "RatingDescriptors": [
+                "GRB:Vio",
+                "GRB:FeaHorThr"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "PCBP",
+              "RatingId": "PCBP:18",
+              "RatingDescriptors": [
+                "PCBP:Vio",
+                "PCBP:Fea"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "CSRR",
+              "RatingId": "CSRR:PG15",
+              "RatingDescriptors": [
+                "CSRR:Vio",
+                "CSRR:AntSocCha"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "Microsoft",
+              "RatingId": "Microsoft:16",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "CCC",
+              "RatingId": "CCC:14",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            }
+          ],
+          "RelatedProducts": [],
+          "UsageData": [
+            {
+              "AggregateTimeSpan": "7Days",
+              "AverageRating": 1,
+              "PlayCount": 0,
+              "RatingCount": 2,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "30Days",
+              "AverageRating": 1,
+              "PlayCount": 0,
+              "RatingCount": 4,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "AllTime",
+              "AverageRating": 2.3,
+              "PlayCount": 0,
+              "RatingCount": 213,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            }
+          ],
+          "BundleConfig": null,
+          "Markets": [
+            "US"
+          ]
+        }
+      ],
+      "ProductASchema": "Product;3",
+      "ProductBSchema": "ProductGame;1",
+      "ProductId": "9P20J0WQMRZJ",
+      "Properties": {
+        "Attributes": [
+          {
+            "Name": "BroadcastSupport",
+            "Minimum": null,
+            "Maximum": null,
+            "ApplicablePlatforms": null,
+            "Group": null
+          },
+          {
+            "Name": "SinglePlayer",
+            "Minimum": null,
+            "Maximum": null,
+            "ApplicablePlatforms": [
+              "Desktop",
+              "Xbox"
+            ],
+            "Group": null
+          },
+          {
+            "Name": "XboxLive",
+            "Minimum": null,
+            "Maximum": null,
+            "ApplicablePlatforms": null,
+            "Group": null
+          }
+        ],
+        "CanInstallToSDCard": true,
+        "Category": "Shooter",
+        "Categories": [
+          "Shooter"
+        ],
+        "Subcategory": null,
+        "IsAccessible": false,
+        "IsDemo": false,
+        "IsLineOfBusinessApp": false,
+        "IsPublishedToLegacyWindowsPhoneStore": false,
+        "IsPublishedToLegacyWindowsStore": false,
+        "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+        "PackageIdentityName": "41340LighthouseGamesStudi.DeadintheWater",
+        "PublisherCertificateName": "CN=78F6A06A-2DAE-429A-8A0C-9653F0B09891",
+        "PublisherId": "10223880",
+        "SkuDisplayGroups": [
+          {
+            "Id": "01",
+            "Treatment": "MergeAvailabilities"
+          }
+        ],
+        "XboxLiveTier": "Open",
+        "XboxXPA": null,
+        "XboxCrossGenSetId": null,
+        "XboxConsoleGenOptimized": null,
+        "XboxConsoleGenCompatible": null,
+        "XboxLiveGoldRequired": false,
+        "ExtendedMetadata": null,
+        "XBOX": {},
+        "ExtendedClientMetadata": {},
+        "OwnershipType": null,
+        "PdpBackgroundColor": "#FFFFFF",
+        "HasAddOns": false,
+        "RevisionId": "2023-12-11T10:34:28.4424927Z"
+      },
+      "AlternateIds": [
+        {
+          "IdType": "LegacyWindowsStoreProductId",
+          "Value": "b78b68c4-9f74-4a81-9162-e9fb8656b177"
+        },
+        {
+          "IdType": "LegacyWindowsPhoneProductId",
+          "Value": "d5e9754f-5eda-41d3-bad1-bc865fd43662"
+        },
+        {
+          "IdType": "XboxTitleId",
+          "Value": "1629199569"
+        }
+      ],
+      "DomainDataVersion": null,
+      "IngestionSource": "DCE",
+      "IsMicrosoftProduct": false,
+      "PreferredSkuId": "0010",
+      "ProductType": "Game",
+      "ValidationData": {
+        "PassedValidation": false,
+        "RevisionId": "2023-12-11T10:34:28.4424927Z||.||b758b04a-e4e2-4fb1-bd68-e2a04ca5c00a||1152921505697136539||Null||fullrelease",
+        "ValidationResultUri": ""
+      },
+      "MerchandizingTags": [],
+      "PartD": "",
+      "ProductFamily": "Games",
+      "SchemaVersion": "3",
+      "ProductKind": "Game",
+      "ProductPolicies": {},
+      "DisplaySkuAvailabilities": [
+        {
+          "Sku": {
+            "LastModifiedDate": "2023-12-11T10:34:17.9298537Z",
+            "LocalizedProperties": [
+              {
+                "Contributors": [],
+                "Features": [
+                  "Survival horror game",
+                  "Realistic Great White sharks"
+                ],
+                "MinimumNotes": "",
+                "RecommendedNotes": "",
+                "ReleaseNotes": "- Improved Performance\r\n- Improved shark damage textures\r\n- Fixed game crashes\r\n",
+                "DisplayPlatformProperties": null,
+                "SkuDescription": "How long will you survive in this open water diving experience as you go head to head with terrifying Great Whites as they threaten to tear you apart!",
+                "SkuTitle": "Death in the Water",
+                "SkuButtonTitle": "",
+                "DeliveryDateOverlay": null,
+                "SkuDisplayRank": [],
+                "TextResources": null,
+                "Images": [],
+                "LegalText": {
+                  "AdditionalLicenseTerms": "",
+                  "Copyright": "Lighthouse Games Studio",
+                  "CopyrightUri": "",
+                  "PrivacyPolicy": "",
+                  "PrivacyPolicyUri": "",
+                  "Tou": "",
+                  "TouUri": ""
+                },
+                "Language": "en-us",
+                "Markets": [
+                  "US",
+                  "DZ",
+                  "AR",
+                  "AU",
+                  "AT",
+                  "BH",
+                  "BD",
+                  "BE",
+                  "BR",
+                  "BG",
+                  "CA",
+                  "CL",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "HR",
+                  "CY",
+                  "CZ",
+                  "DK",
+                  "EG",
+                  "EE",
+                  "FI",
+                  "FR",
+                  "DE",
+                  "GR",
+                  "GT",
+                  "HK",
+                  "HU",
+                  "IS",
+                  "IN",
+                  "ID",
+                  "IQ",
+                  "IE",
+                  "IL",
+                  "IT",
+                  "JP",
+                  "JO",
+                  "KZ",
+                  "KE",
+                  "KW",
+                  "LV",
+                  "LB",
+                  "LI",
+                  "LT",
+                  "LU",
+                  "MY",
+                  "MT",
+                  "MR",
+                  "MX",
+                  "MA",
+                  "NL",
+                  "NZ",
+                  "NG",
+                  "NO",
+                  "OM",
+                  "PK",
+                  "PE",
+                  "PH",
+                  "PL",
+                  "PT",
+                  "QA",
+                  "RO",
+                  "RU",
+                  "SA",
+                  "RS",
+                  "SG",
+                  "SK",
+                  "SI",
+                  "ZA",
+                  "KR",
+                  "ES",
+                  "SE",
+                  "CH",
+                  "TW",
+                  "TH",
+                  "TT",
+                  "TN",
+                  "TR",
+                  "UA",
+                  "AE",
+                  "GB",
+                  "VN",
+                  "YE",
+                  "LY",
+                  "LK",
+                  "UY",
+                  "VE",
+                  "AF",
+                  "AX",
+                  "AL",
+                  "AS",
+                  "AO",
+                  "AI",
+                  "AQ",
+                  "AG",
+                  "AM",
+                  "AW",
+                  "BO",
+                  "BQ",
+                  "BA",
+                  "BW",
+                  "BV",
+                  "IO",
+                  "BN",
+                  "BF",
+                  "BI",
+                  "KH",
+                  "CM",
+                  "CV",
+                  "KY",
+                  "CF",
+                  "TD",
+                  "TL",
+                  "DJ",
+                  "DM",
+                  "DO",
+                  "EC",
+                  "SV",
+                  "GQ",
+                  "ER",
+                  "ET",
+                  "FK",
+                  "FO",
+                  "FJ",
+                  "GF",
+                  "PF",
+                  "TF",
+                  "GA",
+                  "GM",
+                  "GE",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GD",
+                  "GP",
+                  "GU",
+                  "GG",
+                  "GN",
+                  "GW",
+                  "GY",
+                  "HT",
+                  "HM",
+                  "HN",
+                  "AZ",
+                  "BS",
+                  "BB",
+                  "BY",
+                  "BZ",
+                  "BJ",
+                  "BM",
+                  "BT",
+                  "KM",
+                  "CG",
+                  "CD",
+                  "CK",
+                  "CX",
+                  "CC",
+                  "CI",
+                  "CW",
+                  "JM",
+                  "SJ",
+                  "JE",
+                  "KI",
+                  "KG",
+                  "LA",
+                  "LS",
+                  "LR",
+                  "MO",
+                  "MK",
+                  "MG",
+                  "MW",
+                  "IM",
+                  "MH",
+                  "MQ",
+                  "MU",
+                  "YT",
+                  "FM",
+                  "MD",
+                  "MN",
+                  "MS",
+                  "MZ",
+                  "MM",
+                  "NA",
+                  "NR",
+                  "NP",
+                  "MV",
+                  "ML",
+                  "NC",
+                  "NI",
+                  "NE",
+                  "NU",
+                  "NF",
+                  "PW",
+                  "PS",
+                  "PA",
+                  "PG",
+                  "PY",
+                  "RE",
+                  "RW",
+                  "BL",
+                  "MF",
+                  "WS",
+                  "ST",
+                  "SN",
+                  "MP",
+                  "PN",
+                  "SX",
+                  "SB",
+                  "SO",
+                  "SC",
+                  "SL",
+                  "GS",
+                  "SH",
+                  "KN",
+                  "LC",
+                  "PM",
+                  "VC",
+                  "TJ",
+                  "TZ",
+                  "TG",
+                  "TK",
+                  "TO",
+                  "TM",
+                  "TC",
+                  "TV",
+                  "UM",
+                  "UG",
+                  "VI",
+                  "VG",
+                  "WF",
+                  "EH",
+                  "ZM",
+                  "ZW",
+                  "UZ",
+                  "VU",
+                  "SR",
+                  "SZ",
+                  "AD",
+                  "MC",
+                  "SM",
+                  "ME",
+                  "VA",
+                  "NEUTRAL"
+                ]
+              }
+            ],
+            "MarketProperties": [
+              {
+                "FirstAvailableDate": "2019-09-11T01:31:29.5876055Z",
+                "SupportedLanguages": [
+                  "en-us",
+                  "de",
+                  "fr",
+                  "ja",
+                  "ko",
+                  "zh",
+                  "es",
+                  "tr",
+                  "pt",
+                  "ru"
+                ],
+                "PackageIds": null,
+                "PIFilter": null,
+                "Markets": [
+                  "US"
+                ]
+              }
+            ],
+            "ProductId": "9P20J0WQMRZJ",
+            "Properties": {
+              "EarlyAdopterEnrollmentUrl": null,
+              "FulfillmentData": {
+                "ProductId": "9P20J0WQMRZJ",
+                "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                "SkuId": "0010",
+                "Content": null,
+                "PackageFeatures": null
+              },
+              "FulfillmentType": null,
+              "FulfillmentPluginId": null,
+              "HasThirdPartyIAPs": false,
+              "LastUpdateDate": "2023-12-11T10:34:17.0000000Z",
+              "HardwareProperties": {
+                "MinimumHardware": [],
+                "RecommendedHardware": [],
+                "MinimumProcessor": "",
+                "RecommendedProcessor": "",
+                "MinimumGraphics": "",
+                "RecommendedGraphics": ""
+              },
+              "HardwareRequirements": [],
+              "HardwareWarningList": [],
+              "InstallationTerms": "InstallationTermsStandard",
+              "Packages": [
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "gMruf3EJ/juS8VO6faiAID0jqJFK72BFvfEx5N1K95A=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 99701583,
+                  "MaxInstallSizeInBytes": 203296768,
+                  "PackageFormat": "Msix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.8.0_x64__xrpbzce7n1xhy",
+                  "PackageId": "bc2e0774-3a9c-234c-961a-ef0a698cc8dc-X64",
+                  "ContentId": "c988f5d6-b96d-9e52-e845-539885982534",
+                  "KeyId": null,
+                  "PackageRank": 30002,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Universal"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.8.0_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":0}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977234944",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "ziLEivUf+90AYVNd1Zt6bEv5ELjqM9rylbfz7E3gakw=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 203063937,
+                  "MaxInstallSizeInBytes": 203296768,
+                  "PackageFormat": "EMsix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.8.70_x64__xrpbzce7n1xhy",
+                  "PackageId": "4ebbc24b-81c9-8f07-026f-f66a7fad13ed-X64",
+                  "ContentId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "KeyId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "PackageRank": 30012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.8.70_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977235014",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "H1sHVszWQH0k0b370QocXUxKkbwKTe2cfCdfGudDhkA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 101000907,
+                  "MaxInstallSizeInBytes": 209149952,
+                  "PackageFormat": "Msix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.10.0_x64__xrpbzce7n1xhy",
+                  "PackageId": "fe665fd8-ae1f-f0a8-39a5-6b712a7e0c43-X64",
+                  "ContentId": "c988f5d6-b96d-9e52-e845-539885982534",
+                  "KeyId": null,
+                  "PackageRank": 30022,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Universal"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.10.0_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":0}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977366016",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "8sD3PQMf7L9rj67Ql2qB94qf11nwqc87NXCpOvYDkQI=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 208918882,
+                  "MaxInstallSizeInBytes": 209149952,
+                  "PackageFormat": "EMsix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.10.70_x64__xrpbzce7n1xhy",
+                  "PackageId": "33cc2196-07e3-64fc-99ce-54982cd44245-X64",
+                  "ContentId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "KeyId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "PackageRank": 30032,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.10.70_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977366086",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                }
+              ],
+              "VersionString": "",
+              "SkuDisplayGroupIds": [
+                "01"
+              ],
+              "XboxXPA": false,
+              "BundledSkus": [],
+              "IsRepurchasable": false,
+              "SkuDisplayRank": 0,
+              "DisplayPhysicalStoreInventory": null,
+              "VisibleToB2BServiceIds": [],
+              "AdditionalIdentifiers": [],
+              "IsTrial": false,
+              "IsPreOrder": false,
+              "IsBundle": false
+            },
+            "SkuASchema": "Sku;3",
+            "SkuBSchema": "SkuGame;1",
+            "SkuId": "0010",
+            "SkuType": "full",
+            "RecurrencePolicy": null,
+            "SubscriptionPolicyId": null
+          },
+          "Availabilities": [
+            {
+              "Actions": [
+                "Details",
+                "Fulfill",
+                "Purchase",
+                "Browse",
+                "Curate",
+                "Redeem"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "B2L89N0DG7WM",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "2023-12-15T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "PIFilter": {
+                  "ExclusionProperties": [],
+                  "InclusionProperties": []
+                },
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 2.99,
+                  "MSRP": 2.99,
+                  "TaxType": "TaxesNotIncluded",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {
+                "OriginalReleaseDate": "2019-09-11T01:31:29.5876055Z"
+              },
+              "SkuId": "0010",
+              "DisplayRank": 0,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": [
+                "Details",
+                "Fulfill",
+                "Browse",
+                "Curate",
+                "Gift"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "9R0NBVN8RBZQ",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "2023-12-15T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "PIFilter": {
+                  "ExclusionProperties": [],
+                  "InclusionProperties": []
+                },
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 2.99,
+                  "MSRP": 2.99,
+                  "TaxType": "TaxesNotIncluded",
+                  "WholesaleCurrencyCode": ""
+                },
+                "OrderManagementPolicyIdOverride": "microsoft.mint.token",
+                "GeofencingPolicyId": "GIFTGEO:US"
+              },
+              "Properties": {
+                "OriginalReleaseDate": "2019-09-11T01:31:29.5876055Z"
+              },
+              "SkuId": "0010",
+              "DisplayRank": 1,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": [
+                "License",
+                "Browse",
+                "Details"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "9TBTLMP6417R",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "2023-12-15T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "LicensingData": {
+                "SatisfyingEntitlementKeys": [
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0010"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:d5e9754f-5eda-41d3-bad1-bc865fd43662:Full"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:b78b68c4-9f74-4a81-9162-e9fb8656b177:Full"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0001"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0002"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0,
+                  "MSRP": 0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0010",
+              "DisplayRank": 2,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": [
+                "License",
+                "Details"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "9XVBR3DKMKBB",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Team"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Holographic"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Core"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "LicensingData": {
+                "SatisfyingEntitlementKeys": [
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0010"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:d5e9754f-5eda-41d3-bad1-bc865fd43662:Full"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:b78b68c4-9f74-4a81-9162-e9fb8656b177:Full"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0001"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "big:9P20J0WQMRZJ:0002"
+                    ],
+                    "LicensingKeyIds": [
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0,
+                  "MSRP": 0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0010",
+              "DisplayRank": 3,
+              "RemediationRequired": false
+            }
+          ],
+          "HistoricalBestAvailabilities": [
+            {
+              "Actions": [
+                "Details",
+                "Fulfill",
+                "Purchase",
+                "Browse",
+                "Curate",
+                "Redeem"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "B2L89N0DG7WM",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "2023-12-15T00:00:00.0000000Z",
+                "EligibilityPredicateIds": [
+                  "CannotSeenByChinaClient"
+                ],
+                "SupportedCatalogVersion": 6
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "PIFilter": {
+                  "ExclusionProperties": [],
+                  "InclusionProperties": []
+                },
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 2.99,
+                  "MSRP": 2.99,
+                  "TaxType": "TaxesNotIncluded",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {
+                "OriginalReleaseDate": "2019-09-11T01:31:29.5876055Z"
+              },
+              "SkuId": "0010",
+              "DisplayRank": 1,
+              "ProductASchema": "Product;3"
+            }
+          ]
+        },
+        {
+          "Sku": {
+            "LastModifiedDate": "2023-12-11T10:34:17.9298537Z",
+            "LocalizedProperties": [
+              {
+                "Contributors": [],
+                "Features": [
+                  "Survival horror game",
+                  "Realistic Great White sharks"
+                ],
+                "MinimumNotes": "",
+                "RecommendedNotes": "",
+                "ReleaseNotes": "- Improved Performance\r\n- Improved shark damage textures\r\n- Fixed game crashes\r\n",
+                "DisplayPlatformProperties": null,
+                "SkuDescription": "How long will you survive in this open water diving experience as you go head to head with terrifying Great Whites as they threaten to tear you apart!",
+                "SkuTitle": "Death in the Water",
+                "SkuButtonTitle": "",
+                "DeliveryDateOverlay": null,
+                "SkuDisplayRank": [],
+                "TextResources": null,
+                "Images": [],
+                "LegalText": {
+                  "AdditionalLicenseTerms": "",
+                  "Copyright": "Lighthouse Games Studio",
+                  "CopyrightUri": "",
+                  "PrivacyPolicy": "",
+                  "PrivacyPolicyUri": "",
+                  "Tou": "",
+                  "TouUri": ""
+                },
+                "Language": "en-us",
+                "Markets": [
+                  "US",
+                  "DZ",
+                  "AR",
+                  "AU",
+                  "AT",
+                  "BH",
+                  "BD",
+                  "BE",
+                  "BR",
+                  "BG",
+                  "CA",
+                  "CL",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "HR",
+                  "CY",
+                  "CZ",
+                  "DK",
+                  "EG",
+                  "EE",
+                  "FI",
+                  "FR",
+                  "DE",
+                  "GR",
+                  "GT",
+                  "HK",
+                  "HU",
+                  "IS",
+                  "IN",
+                  "ID",
+                  "IQ",
+                  "IE",
+                  "IL",
+                  "IT",
+                  "JP",
+                  "JO",
+                  "KZ",
+                  "KE",
+                  "KW",
+                  "LV",
+                  "LB",
+                  "LI",
+                  "LT",
+                  "LU",
+                  "MY",
+                  "MT",
+                  "MR",
+                  "MX",
+                  "MA",
+                  "NL",
+                  "NZ",
+                  "NG",
+                  "NO",
+                  "OM",
+                  "PK",
+                  "PE",
+                  "PH",
+                  "PL",
+                  "PT",
+                  "QA",
+                  "RO",
+                  "RU",
+                  "SA",
+                  "RS",
+                  "SG",
+                  "SK",
+                  "SI",
+                  "ZA",
+                  "KR",
+                  "ES",
+                  "SE",
+                  "CH",
+                  "TW",
+                  "TH",
+                  "TT",
+                  "TN",
+                  "TR",
+                  "UA",
+                  "AE",
+                  "GB",
+                  "VN",
+                  "YE",
+                  "LY",
+                  "LK",
+                  "UY",
+                  "VE",
+                  "AF",
+                  "AX",
+                  "AL",
+                  "AS",
+                  "AO",
+                  "AI",
+                  "AQ",
+                  "AG",
+                  "AM",
+                  "AW",
+                  "BO",
+                  "BQ",
+                  "BA",
+                  "BW",
+                  "BV",
+                  "IO",
+                  "BN",
+                  "BF",
+                  "BI",
+                  "KH",
+                  "CM",
+                  "CV",
+                  "KY",
+                  "CF",
+                  "TD",
+                  "TL",
+                  "DJ",
+                  "DM",
+                  "DO",
+                  "EC",
+                  "SV",
+                  "GQ",
+                  "ER",
+                  "ET",
+                  "FK",
+                  "FO",
+                  "FJ",
+                  "GF",
+                  "PF",
+                  "TF",
+                  "GA",
+                  "GM",
+                  "GE",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GD",
+                  "GP",
+                  "GU",
+                  "GG",
+                  "GN",
+                  "GW",
+                  "GY",
+                  "HT",
+                  "HM",
+                  "HN",
+                  "AZ",
+                  "BS",
+                  "BB",
+                  "BY",
+                  "BZ",
+                  "BJ",
+                  "BM",
+                  "BT",
+                  "KM",
+                  "CG",
+                  "CD",
+                  "CK",
+                  "CX",
+                  "CC",
+                  "CI",
+                  "CW",
+                  "JM",
+                  "SJ",
+                  "JE",
+                  "KI",
+                  "KG",
+                  "LA",
+                  "LS",
+                  "LR",
+                  "MO",
+                  "MK",
+                  "MG",
+                  "MW",
+                  "IM",
+                  "MH",
+                  "MQ",
+                  "MU",
+                  "YT",
+                  "FM",
+                  "MD",
+                  "MN",
+                  "MS",
+                  "MZ",
+                  "MM",
+                  "NA",
+                  "NR",
+                  "NP",
+                  "MV",
+                  "ML",
+                  "NC",
+                  "NI",
+                  "NE",
+                  "NU",
+                  "NF",
+                  "PW",
+                  "PS",
+                  "PA",
+                  "PG",
+                  "PY",
+                  "RE",
+                  "RW",
+                  "BL",
+                  "MF",
+                  "WS",
+                  "ST",
+                  "SN",
+                  "MP",
+                  "PN",
+                  "SX",
+                  "SB",
+                  "SO",
+                  "SC",
+                  "SL",
+                  "GS",
+                  "SH",
+                  "KN",
+                  "LC",
+                  "PM",
+                  "VC",
+                  "TJ",
+                  "TZ",
+                  "TG",
+                  "TK",
+                  "TO",
+                  "TM",
+                  "TC",
+                  "TV",
+                  "UM",
+                  "UG",
+                  "VI",
+                  "VG",
+                  "WF",
+                  "EH",
+                  "ZM",
+                  "ZW",
+                  "UZ",
+                  "VU",
+                  "SR",
+                  "SZ",
+                  "AD",
+                  "MC",
+                  "SM",
+                  "ME",
+                  "VA",
+                  "NEUTRAL"
+                ]
+              }
+            ],
+            "MarketProperties": [
+              {
+                "FirstAvailableDate": "2019-09-11T01:31:29.5876055Z",
+                "SupportedLanguages": [
+                  "en-us",
+                  "de",
+                  "fr",
+                  "ja",
+                  "ko",
+                  "zh",
+                  "es",
+                  "tr",
+                  "pt",
+                  "ru"
+                ],
+                "PackageIds": null,
+                "PIFilter": null,
+                "Markets": [
+                  "US"
+                ]
+              }
+            ],
+            "ProductId": "9P20J0WQMRZJ",
+            "Properties": {
+              "EarlyAdopterEnrollmentUrl": null,
+              "FulfillmentData": {
+                "ProductId": "9P20J0WQMRZJ",
+                "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                "SkuId": "0011",
+                "Content": null,
+                "PackageFeatures": null
+              },
+              "FulfillmentType": null,
+              "FulfillmentPluginId": null,
+              "HasThirdPartyIAPs": false,
+              "LastUpdateDate": "2023-12-11T10:34:17.0000000Z",
+              "HardwareProperties": {
+                "MinimumHardware": [],
+                "RecommendedHardware": [],
+                "MinimumProcessor": "",
+                "RecommendedProcessor": "",
+                "MinimumGraphics": "",
+                "RecommendedGraphics": ""
+              },
+              "HardwareRequirements": [],
+              "HardwareWarningList": [],
+              "InstallationTerms": "InstallationTermsStandard",
+              "Packages": [
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "gMruf3EJ/juS8VO6faiAID0jqJFK72BFvfEx5N1K95A=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 99701583,
+                  "MaxInstallSizeInBytes": 203296768,
+                  "PackageFormat": "Msix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.8.0_x64__xrpbzce7n1xhy",
+                  "PackageId": "bc2e0774-3a9c-234c-961a-ef0a698cc8dc-X64",
+                  "ContentId": "c988f5d6-b96d-9e52-e845-539885982534",
+                  "KeyId": null,
+                  "PackageRank": 30002,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Universal"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.8.0_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":0}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977234944",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "ziLEivUf+90AYVNd1Zt6bEv5ELjqM9rylbfz7E3gakw=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 203063937,
+                  "MaxInstallSizeInBytes": 203296768,
+                  "PackageFormat": "EMsix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.8.70_x64__xrpbzce7n1xhy",
+                  "PackageId": "4ebbc24b-81c9-8f07-026f-f66a7fad13ed-X64",
+                  "ContentId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "KeyId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "PackageRank": 30012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.8.70_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977235014",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "H1sHVszWQH0k0b370QocXUxKkbwKTe2cfCdfGudDhkA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 101000907,
+                  "MaxInstallSizeInBytes": 209149952,
+                  "PackageFormat": "Msix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.10.0_x64__xrpbzce7n1xhy",
+                  "PackageId": "fe665fd8-ae1f-f0a8-39a5-6b712a7e0c43-X64",
+                  "ContentId": "c988f5d6-b96d-9e52-e845-539885982534",
+                  "KeyId": null,
+                  "PackageRank": 30022,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Universal"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.10.0_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":0}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977366016",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "Capabilities": [],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651464589312,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [
+                    "dxa"
+                  ],
+                  "HardwareRequirements": [],
+                  "Hash": "8sD3PQMf7L9rj67Ql2qB94qf11nwqc87NXCpOvYDkQI=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us"
+                  ],
+                  "MaxDownloadSizeInBytes": 208918882,
+                  "MaxInstallSizeInBytes": 209149952,
+                  "PackageFormat": "EMsix",
+                  "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "41340LighthouseGamesStudi.DeadintheWater_1.0.10.70_x64__xrpbzce7n1xhy",
+                  "PackageId": "33cc2196-07e3-64fc-99ce-54982cd44245-X64",
+                  "ContentId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "KeyId": "83397e1f-14ed-45e5-e9f7-f03963ebaf94",
+                  "PackageRank": 30032,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750970478592,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.packageId\":\"41340LighthouseGamesStudi.DeadintheWater_1.0.10.70_x64__xrpbzce7n1xhy\",\"content.productId\":\"d5e9754f-5eda-41d3-bad1-bc865fd43662\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750970478592,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"game\",\"category.second\":\"Games\",\"category.third\":\"Shooter\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":4,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":15,\"systemId\":5},{\"level\":51,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":79,\"systemId\":16},{\"level\":42,\"systemId\":10},{\"level\":18,\"systemId\":6},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281474977366086",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9P20J0WQMRZJ",
+                    "WuBundleId": "b98e2847-2137-4630-a73a-a676d705dcc5",
+                    "WuCategoryId": "0ebf99f9-4505-4c35-95ea-b3cf56d51f60",
+                    "PackageFamilyName": "41340LighthouseGamesStudi.DeadintheWater_xrpbzce7n1xhy",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                }
+              ],
+              "VersionString": "",
+              "SkuDisplayGroupIds": null,
+              "XboxXPA": false,
+              "BundledSkus": [],
+              "IsRepurchasable": false,
+              "SkuDisplayRank": 2,
+              "DisplayPhysicalStoreInventory": null,
+              "VisibleToB2BServiceIds": [],
+              "AdditionalIdentifiers": [],
+              "IsTrial": true,
+              "IsPreOrder": false,
+              "IsBundle": false,
+              "TrialTimeInSeconds": 86400
+            },
+            "SkuASchema": "Sku;3",
+            "SkuBSchema": "SkuGame;1",
+            "SkuId": "0011",
+            "SkuType": "trial",
+            "RecurrencePolicy": null,
+            "SubscriptionPolicyId": null
+          },
+          "Availabilities": [
+            {
+              "Actions": [
+                "License"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "B486Q2KL7ZP1",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "2019-12-03T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0,
+                  "MSRP": 0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0011",
+              "DisplayRank": 0,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": [
+                "License",
+                "Details"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityGame;1",
+              "AvailabilityId": "9N80L4VL4XV8",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Team"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Holographic"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Core"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": [
+                  "1"
+                ],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2023-12-11T10:32:52.6726966Z",
+              "Markets": [
+                "US"
+              ],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0,
+                  "MSRP": 0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0011",
+              "DisplayRank": 1,
+              "RemediationRequired": false
+            }
+          ],
+          "HistoricalBestAvailabilities": []
+        }
+      ]
+    }
+  ],
+  "TotalResultCount": 1
+}

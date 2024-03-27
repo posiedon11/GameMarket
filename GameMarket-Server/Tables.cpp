@@ -7,15 +7,26 @@ namespace tables_namespace
 	{
 		switch (collection)
 		{
-		case Tables::XboxGameGenres: return "XboxGameGenres";
-		case Tables::XboxGameTitles: return "XboxGameTitles";
-		case Tables::XboxUserProfiles: return "XboxUserProfiles";
-		case Tables::XboxGameDetails: return "XboxGameDetails";
-		case Tables::XboxGameBundles: return "XboxGameBundles";
-		case Tables::XboxTitleDetails: return "XboxTitleDetails";
-		case Tables::XboxMarketDetails: return "XboxMarketDetails";
-		case Tables::SteamGames: return "SteamGames";
-		case Tables::SteamGameGenres: return "SteamGameGenres";
+			//xbox tables
+		case Tables::XboxGameGenres: return "GameGenres";
+		case Tables::XboxGameTitles: return "GameTitles";
+		case Tables::XboxUserProfiles: return "UserProfiles";
+		case Tables::XboxProductIds: return "ProductIds";
+		case Tables::XboxGameBundles: return "GameBundles";
+		case Tables::XboxTitleDetails: return "TitleDetails";
+		case Tables::XboxMarketDetails: return "MarketDetails";
+		case Tables::XboxGroupData: return "GroupData";
+		
+			//steam tables
+		case Tables::SteamAppIDs: return "APPIds";
+		case Tables::SteamAppDetails: return "AppDetails";
+		case Tables::SteamAppPublishers: return "AppPublishers";
+		case Tables::SteamAppDevelopers: return "AppDevelopers";
+		case Tables::SteamAppGenres: return "AppGenres";
+		case Tables::SteamPackageIDs:return "PackageIDs";
+		case Tables::SteamPackageDetails: return "PackageDetails";
+		case Tables::SteamPackages: return "Packages";
+		case Tables::SteamAppPlatforms: return "AppPlatforms";
 
 		default: return "";
 		}
@@ -59,5 +70,10 @@ namespace tables_namespace
 			cout << bundle << "  ";
 		}
 		cout << endl << endl;
+	}
+	void SteamAPPListData::outputData()
+	{
+		cout << "APPid: " << appid << endl;
+		cout << "Name: " << name << endl <<endl;
 	}
 }

@@ -3,32 +3,16 @@
 
 namespace GameMarketSettings_NameSpace
 {
-
-
-	Settings& Settings::getInstance()
-	{
-		static Settings instance;
-		return instance;
-	}
-	
-	SQLServerSettings& SQLServerSettings::getInstance()
-	{
-		static SQLServerSettings instance;
-		return instance;
-	}
-
 	void SQLServerSettings::printServerSettings()
 	{
 		std::cout << std::endl << serverName << std::endl << serverPort << std::endl << serverUserName << std::endl << serverPassword << std::endl;
 
 	}
 
-	 XboxSettings& XboxSettings::getInstance()
+	void XboxSettings::setRemaingCalls(int value)
 	{
-		static XboxSettings instance;
-		return instance;
+		remainingAPIRequests = value;
 	}
-
 	 int XboxSettings::remaingRequests(hourlyAPICallsRemaining hourlyCalls)
 	 {
 		 switch (hourlyCalls)
@@ -46,6 +30,7 @@ namespace GameMarketSettings_NameSpace
 			 return hourlyTitleRemaining;
 
 		 default:
+			 return 0;
 			 break;
 		 }
 	 }
@@ -91,7 +76,8 @@ namespace GameMarketSettings_NameSpace
 		 }
 		 else if (autoUseExtraCalls && hourlyExtraRemaining > 0)
 		 {
-			 cout << "using extra" <<endl;
+			 if (outputDebug)
+				cout << "using extra" <<endl;
 			 return true;
 		 }
 		 return false;
@@ -106,6 +92,7 @@ namespace GameMarketSettings_NameSpace
 		 case GameMarketSettings_NameSpace::XboxSettings::hourlyAPICallsRemaining::title:
 			 if (hourlyTitleRemaining-- <= 0)
 			 {
+				 if (outputDebug)
 				 cout << "Taking from extra" << endl;
 				-- hourlyExtraRemaining;
 			 }
@@ -154,6 +141,12 @@ namespace GameMarketSettings_NameSpace
 		 cout << "Title calls Remaining: " << hourlyTitleRemaining << ".   Percentage of Max: " << hourlyTitleRequestPercent * 100 << "%" << endl;
 		 cout << "Extra calls Remaining: " << hourlyExtraRemaining << ".   Percentage of Max: " << (1 - hourlyProfileRequestPercent - hourlyMarketRequestPercent - hourlyTitleRequestPercent) * 100 << "%" << endl;
 		 cout << endl;
+	 }
+
+	 Settings& Settings::getInstance()
+	 {
+		 static Settings instance;
+		 return instance;
 	 }
 
 }
