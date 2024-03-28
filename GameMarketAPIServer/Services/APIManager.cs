@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using GameMarketAPIServer.Configuration;
 using Newtonsoft.Json;
 using GameMarketAPIServer.Models;
+using Microsoft.Extensions.Options;
 
 namespace GameMarketAPIServer.Services
 {
@@ -19,7 +20,7 @@ namespace GameMarketAPIServer.Services
     {
         protected readonly HttpClient httpClient;
         protected readonly IDataBaseManager dbManager;
-        protected readonly Settings settings;
+        protected readonly MainSettings settings;
 
         public const string errorURLNoParam = "Error, missing paramater";
         public const string errorURLCallDoesntExist = "Error, API call does not exist";
@@ -33,14 +34,14 @@ namespace GameMarketAPIServer.Services
         protected CancellationTokenSource mainCTS = new CancellationTokenSource();
         protected Task mainTask;
 
-        protected APIManager(IDataBaseManager dbManager, Settings settings, string managerName)
+        protected APIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, string managerName)
         {
             // this.settings = settings;
-            this.settings = Settings.Instance;
+            this.settings = settings.Value;
             this.dbManager = dbManager;
             this.managerName = managerName;
             httpClient = new HttpClient();
-            CreateDefaultHeaders();
+            CreateDefaultHeaders(settings);
 
         }
         public virtual void Start()
@@ -138,7 +139,7 @@ namespace GameMarketAPIServer.Services
 
 
 
-        protected abstract void CreateDefaultHeaders();
+        protected abstract void CreateDefaultHeaders(IOptions<MainSettings>settings);
         protected abstract void AddAdditionalHeaders(HttpRequestMessage request, int apiCall, string paramaters, string payload);
         protected abstract void HandleHttpClientHeaders(HttpHeaders headers, int apiCall, string paramaters);
 

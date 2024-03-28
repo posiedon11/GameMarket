@@ -6,6 +6,7 @@ using GameMarketAPIServer.Models;
 using GameMarketAPIServer.Models.Enums;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using MySqlConnector;
 using System.Text.RegularExpressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -15,8 +16,8 @@ namespace GameMarketAPIServer.Services
 {
     public class GameMergerManager
     {
-        DataBaseManager dbManager;
-        Settings settings;
+        IDataBaseManager dbManager;
+        MainSettings settings;
 
         public enum SpecialGroupCases
         {
@@ -58,10 +59,10 @@ namespace GameMarketAPIServer.Services
             "[^\\p{L}\\p{Nd}:?;.' ]",
             @"\\s{2,|"
         };
-        public GameMergerManager(DataBaseManager dbManager)
+        public GameMergerManager(IDataBaseManager dbManager, IOptions<MainSettings> settings)
         {
             this.dbManager = dbManager;
-            this.settings = Settings.Instance;
+            this.settings = settings.Value;
         }
 
         public async Task<Dictionary<string, List<string>>> MergeXboxGamesAsync()

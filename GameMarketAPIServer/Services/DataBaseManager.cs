@@ -10,6 +10,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using static SteamKit2.DepotManifest;
 using System.Diagnostics;
 using System.Windows.Input;
+using Microsoft.Extensions.Options;
 
 namespace GameMarketAPIServer.Services
 {
@@ -34,6 +35,7 @@ namespace GameMarketAPIServer.Services
     }
     public class DataBaseManager : IDataBaseManager
     {
+        protected MainSettings mainSettings;
         protected SQLServerSettings sqlserverSettings;
         public string connectionString { get; set; }
         private readonly Queue<(Tables, TableData, CRUD)> xboxQueue = new Queue<(Tables, TableData, CRUD)>();
@@ -56,9 +58,10 @@ namespace GameMarketAPIServer.Services
         }
 
 
-        public DataBaseManager(Settings settings)
+        public DataBaseManager(IOptions<MainSettings> settings)
         {
-            sqlserverSettings = settings.sqlServerSettings;
+            mainSettings = settings.Value;
+            sqlserverSettings = settings.Value.sqlServerSettings;
 
             connectionString = "Server=" + sqlserverSettings.serverName + ";Port=" + sqlserverSettings.serverPort + ";User=" + sqlserverSettings.serverUserName + ";Password=" + sqlserverSettings.serverPassword + ";";
         }
@@ -1409,7 +1412,7 @@ namespace GameMarketAPIServer.Services
                     }
 
                     await transaction.CommitAsync();
-                    if (sqlserverSettings.outputDebug)
+                    if (sqlserverSettings.outputSettings.outputDebug)
                         Console.WriteLine("Sql Ran Successfully");
                     return true;
                 }

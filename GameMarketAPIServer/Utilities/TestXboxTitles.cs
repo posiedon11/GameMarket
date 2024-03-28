@@ -5,6 +5,7 @@ using Xunit.Abstractions;
 using GameMarketAPIServer.Configuration;
 using static SteamKit2.Internal.CMsgCellList;
 using GameMarketAPIServer.Models;
+using Microsoft.Extensions.Options;
 
 
 namespace GameMarketAPIServer.Utilities
@@ -15,7 +16,7 @@ namespace GameMarketAPIServer.Utilities
         protected readonly Mock<IAPIManager> mockAPICaller;
         protected readonly Mock<IDataBaseManager> mockDataBaseManager;
 
-        protected Test(ITestOutputHelper output)
+        protected Test(ITestOutputHelper output, IOptions<MainSettings> settings)
         {
             this.output = output;
             mockAPICaller = new Mock<IAPIManager>();
@@ -27,8 +28,8 @@ namespace GameMarketAPIServer.Utilities
         
         private XblAPIManager xblManager;
         private readonly int call = (int)XblAPIManager.APICalls.gameTitle;
-        public TestXboxTitles(ITestOutputHelper output) : base(output)         {
-            xblManager = new XblAPIManager(mockDataBaseManager.Object, Settings.Instance);
+        public TestXboxTitles(ITestOutputHelper output, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(output, settings)         {
+            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, apiTracker);
             //cant really do player histories
 
             //Game Titles:
@@ -134,9 +135,9 @@ namespace GameMarketAPIServer.Utilities
     {
         private readonly int call = (int)XblAPIManager.APICalls.marketDetails;
         private XblAPIManager xblManager;
-        public TestXboxProducts(ITestOutputHelper output) : base(output) 
+        public TestXboxProducts(ITestOutputHelper output, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(output, settings) 
         {
-            xblManager = new XblAPIManager(mockDataBaseManager.Object, Settings.Instance);
+            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, apiTracker);
             //ProductIDs
             //Control Standard
             mockAPICaller.Setup(x => x.CallAPIAsync((int)XblAPIManager.APICalls.marketDetails, "9PL1J8PJKH29"))

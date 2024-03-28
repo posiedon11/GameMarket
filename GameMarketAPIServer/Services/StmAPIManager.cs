@@ -9,12 +9,14 @@ using System.Reflection.Metadata;
 using MySqlConnector;
 using System.Diagnostics;
 using System.Data;
+using Microsoft.Extensions.Options;
 
 namespace GameMarketAPIServer.Services
 {
     public class StmAPIManager : APIManager
     {
         protected SteamSettings stmSettings;
+        protected StmAPITracker apiTracker;
         protected readonly List<string> validAppTypes = new List<string>
         {
             "game",
@@ -36,9 +38,11 @@ namespace GameMarketAPIServer.Services
 
 
 
-        public StmAPIManager(DataBaseManager dbManager, Settings settings) : base(dbManager, settings, "steam")
+        public StmAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, StmAPITracker apiTracker) : base(dbManager, settings, "steam")
         {
-            stmSettings = Settings.Instance.steamSettings;
+
+            stmSettings = settings.Value.steamSettings;
+            this.apiTracker = apiTracker;
         }
 
 
@@ -199,7 +203,7 @@ namespace GameMarketAPIServer.Services
                         if (app.name == null) { ++nullcount; continue; }
                         appData.appid = app.appid;
                         appData.name = app.name;
-                        if (stmSettings.outputData)
+                        if (stmSettings.outputSettings.outputDebug)
                             appData.outputData();
                         await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppIDs, appData, CRUD.Create);
                         returnList.Add(appData);
@@ -251,7 +255,7 @@ namespace GameMarketAPIServer.Services
                         appData.name = app.name;
 
 
-                        if (stmSettings.outputData)
+                        if (stmSettings.outputSettings.outputAll)
                             appData.outputData();
                         await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppIDs, appData, CRUD.Create);
                         returnList.Add(appData);
@@ -474,7 +478,7 @@ namespace GameMarketAPIServer.Services
 
                         try
                         {
-                            if (stmSettings.canRequest())
+                            if (apiTracker.canRequest())
                             {
                                 //check if paramater has 
                                 if (++curentCallLimit > stmSettings.maxRequestIn5Minutes)
@@ -488,7 +492,7 @@ namespace GameMarketAPIServer.Services
                                     maxCallTimer.Restart();
                                     curentCallLimit = 0;
                                 }
-                                stmSettings.makeRequest();
+                                apiTracker.makeRequest();
 
                                 string appDetails = await CallAPIAsync((int)APICalls.getAppDetails, appId.ToString());
                                 if (appDetails != httpRequestFail)
@@ -532,7 +536,7 @@ namespace GameMarketAPIServer.Services
 
         }
 
-        protected override void CreateDefaultHeaders()
+        protected override void CreateDefaultHeaders(IOptions<MainSettings> settings)
         {
 
         }

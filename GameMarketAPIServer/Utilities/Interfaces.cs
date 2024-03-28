@@ -5,6 +5,12 @@ namespace GameMarketAPIServer.Utilities
     public class Interfaces
     {
     }
+
+    public interface APITracker
+    {
+        bool canRequest();
+
+    }
     public interface ILogger
     {
         public void WriteLine(string message);
@@ -24,4 +30,6 @@ namespace GameMarketAPIServer.Utilities
             output.WriteLine(message);
         }
     }
+
+
 }

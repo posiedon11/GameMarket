@@ -63,9 +63,9 @@ namespace GameMarketAPIServer.Models.Enums
         {
             switch(schema)
             {
-                case Schemas.xbox: return Settings.Instance.sqlServerSettings.xboxSchema;
-                case Schemas.steam: return Settings.Instance.sqlServerSettings.steamSchema;
-                case Schemas.gamemarket: return Settings.Instance.sqlServerSettings.gamemarketSchema;
+                //case Schemas.xbox: return MainSettings.Instance.sqlServerSettings.xboxSchema;
+                //case Schemas.steam: return MainSettings.Instance.sqlServerSettings.steamSchema;
+                //case Schemas.gamemarket: return MainSettings.Instance.sqlServerSettings.gamemarketSchema;
 
                 default: return "";
             }

@@ -15,6 +15,7 @@ using MySqlConnector;
 using System.Diagnostics;
 using SteamKit2.Internal;
 using static GameMarketAPIServer.Services.DataBaseManager;
+using Microsoft.Extensions.Options;
 
 namespace GameMarketAPIServer.Services
 {
@@ -24,6 +25,7 @@ namespace GameMarketAPIServer.Services
         //for games that arent on a xbox device, so pc/mobile, use https://apps.microsoft.com/detail/productid?hl=en-us&gl=U
         
         protected XboxSettings xboxSettings;
+        protected XblAPITracker apiTracker;
         private Dictionary<string, XboxGameTitleData> titleDataQueue = new Dictionary<string, XboxGameTitleData>();
         private Dictionary<string, XboxTitleDetailsData> groupDetailsQueue = new Dictionary<string, XboxTitleDetailsData>();
 
@@ -49,10 +51,12 @@ namespace GameMarketAPIServer.Services
 
 
 
-        public XblAPIManager(IDataBaseManager dbManager, Settings settings) : base(dbManager, settings, "xbox")
+        public XblAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(dbManager, settings, "xbox")
         {
-            this.xboxSettings = Settings.Instance.xboxSettings;
-            this.xboxSettings.resetHourlyRequest();
+            this.xboxSettings = settings.Value.xboxSettings;
+            this.apiTracker = apiTracker;
+            this.apiTracker.resetHourlyRequest();
+            //this.xboxSettings.resetHourlyRequest();
         }
 
 
@@ -60,8 +64,8 @@ namespace GameMarketAPIServer.Services
         private async Task<bool> checkAPILimit()
         {
             string response = await CallAPIAsync((int)APICalls.checkAPILimit, checkHeaders);
-            xboxSettings.makeRequest(XboxSettings.hourlyAPICallsRemaining.extra);
-            return (xboxSettings.remainingAPIRequests > 0);
+            apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.extra);
+            return (apiTracker.remainingAPIRequests > 0);
             //return await ParseJsonAsync((int)APICalls.checkAPILimit, response);
         }
         //Overridefunctions
@@ -89,7 +93,7 @@ namespace GameMarketAPIServer.Services
                 await scanAllGameTitles(2);
                 await dbManager.processXboxQueueAsync();
 
-                xboxSettings.outputRemainingRequests();
+                apiTracker.outputRemainingRequests();
 #endif
 #if true
                 await scanAllProductIds(2);
@@ -438,7 +442,7 @@ namespace GameMarketAPIServer.Services
                 //JObject oo = JObject.Parse(json);
                 // Console.WriteLine(oo.ToString());
 
-                if (xboxSettings.outputDebug)
+                if (xboxSettings.outputSettings.outputDebug)
                     Console.WriteLine("Parsing Player history");
                 List<TableData> returnList = new List<TableData>();
 
@@ -478,7 +482,7 @@ namespace GameMarketAPIServer.Services
         {
             try
             {
-                if (!xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.profile)) { return; }
+                if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.profile)) { return; }
 
                 var now = DateTime.UtcNow;
                 var refreshTime = DateTime.UtcNow - xboxSettings.userProfileUpdateFrequency;
@@ -521,9 +525,9 @@ namespace GameMarketAPIServer.Services
                         try
                         {
 
-                            if (xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.profile))
+                            if (apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.profile))
                             {
-                                xboxSettings.makeRequest(XboxSettings.hourlyAPICallsRemaining.profile);
+                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.profile);
                                 string historyRespone = await CallAPIAsync((int)APICalls.playerTitleHistory, xuid);
                                 await ParseJsonAsync((int)APICalls.playerTitleHistory, historyRespone);
                                 await dbManager.EnqueueXboxQueueAsync(Tables.XboxUserProfiles, new XboxUpdateScannedData() { ID = xuid}, CRUD.Update);
@@ -551,7 +555,7 @@ namespace GameMarketAPIServer.Services
 
         public async Task scanAllGameTitles(int maxCalls = 5000)
         {
-            if (!xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.title)) { return; }
+            if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.title)) { return; }
             try
             {
 
@@ -597,9 +601,9 @@ namespace GameMarketAPIServer.Services
                         }
                         try
                         {
-                            if (xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.title))
+                            if (apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.title))
                             {
-                                xboxSettings.makeRequest(XboxSettings.hourlyAPICallsRemaining.title);
+                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.title);
                                 string historyRespone = await CallAPIAsync((int)APICalls.gameTitle, modernTitleId);
                                 if (historyRespone == httpRequestFail) continue;
                                 var (success, tableData) = await ParseJsonAsync((int)APICalls.gameTitle, historyRespone);
@@ -638,7 +642,7 @@ namespace GameMarketAPIServer.Services
 
         public async Task scanAllProductIds(int maxCalls = 5000)
         {
-            if (!xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.market)) { return; }
+            if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) { return; }
             try
             {
                 var now = DateTime.UtcNow;
@@ -686,6 +690,7 @@ namespace GameMarketAPIServer.Services
                             Console.WriteLine("Reached max call limit:");
                             return;
                         }
+                        if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) return;
                         currentProductIds.Add(productIDS[0]);
                         productIDS.RemoveAt(0);
                         if (currentProductIds.Count == xboxSettings.maxProductsForMarketDetails || productIDS.Count == 0)
@@ -693,6 +698,7 @@ namespace GameMarketAPIServer.Services
 
                             try
                             {
+                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.market);
                                 paramaters.Add("products", currentProductIds);
                                 string historyRespone = await CallAPIAsync((int)APICalls.marketDetails, JsonConvert.SerializeObject(paramaters));
 
@@ -703,7 +709,7 @@ namespace GameMarketAPIServer.Services
                                     continue;
                                 }
                                 var (success, returnList) = await ParseJsonAsync((int)APICalls.marketDetails, historyRespone);
-                                if (!xboxSettings.canRequest(XboxSettings.hourlyAPICallsRemaining.market)) return;
+                                if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) return;
                                 if (success)
                                 {
                                     foreach (var id in currentProductIds)
@@ -796,15 +802,15 @@ namespace GameMarketAPIServer.Services
             }
 
         }
-        protected override void CreateDefaultHeaders()
+        protected override void CreateDefaultHeaders(IOptions<MainSettings> settings)
         {
             httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
-            httpClient.DefaultRequestHeaders.Add("x-authorization", Settings.Instance.xboxSettings.xblAPIKey);
+            httpClient.DefaultRequestHeaders.Add("x-authorization", settings.Value.xboxSettings.apiKey);
         }
 
         protected override void AddAdditionalHeaders(HttpRequestMessage request, int apiCall, string paramaters, string payload)
         {
-            if (xboxSettings.outputDebug)
+            if (xboxSettings.outputSettings.outputDebug)
                 Console.WriteLine("Adding Headers");
 
             if (paramaters == "" || paramaters == checkHeaders)
@@ -819,7 +825,7 @@ namespace GameMarketAPIServer.Services
 
         protected override void HandleHttpClientHeaders(HttpHeaders headers, int apiCall, string paramaters)
         {
-            if (xboxSettings.outputDebug)
+            if (xboxSettings.outputSettings.outputDebug)
                 Console.WriteLine("Handleing Headers");
             if (settings.outputHTTPResponse)
             {
@@ -839,11 +845,11 @@ namespace GameMarketAPIServer.Services
                 {
                     if (int.TryParse(rateMax.FirstOrDefault(), out var max))
                     {
-                        xboxSettings.maxHourlyAPIRequests = max;
+                        apiTracker.setMaxCAlls(max);
                     }
                     if (int.TryParse(rateUsed.FirstOrDefault(), out var used))
                     {
-                        xboxSettings.remainingAPIRequests = max - used;
+                        apiTracker.setRemaingCalls( max - used);
                     }
 
                 }
