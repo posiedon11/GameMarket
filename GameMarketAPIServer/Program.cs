@@ -1,11 +1,20 @@
 
 using GameMarketAPIServer.Configuration;
+using GameMarketAPIServer.Models;
 using GameMarketAPIServer.Services;
+using GameMarketAPIServer.Utilities;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddEventSourceLogger();
+builder.Services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+
 
 // Add services to the container.
 
@@ -15,17 +24,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<MainSettings>(builder.Configuration.GetSection("MainSettings"));
 builder.Services.AddSingleton<XblAPITracker>();
-//builder.Services.AddSingleton<MainSettings>(MainSettings.Instance);
+builder.Services.AddSingleton<StmAPITracker>();
 builder.Services.AddSingleton<IDataBaseManager, DataBaseManager>();
 builder.Services.AddSingleton<XblAPIManager>();
-builder.Services.AddSingleton< IAPIManager, StmAPIManager >();
+builder.Services.AddSingleton<StmAPIManager >();
 builder.Services.AddSingleton<GameMergerManager>();
 
 var app = builder.Build();
 
 
 var xblManager = app.Services.GetRequiredService<XblAPIManager>();
-//var mergerManager = app.Services.GetRequiredService<GameMergerManager>();
+var mergerManager = app.Services.GetRequiredService<GameMergerManager>();
 
 
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
@@ -37,8 +46,8 @@ lifetime.ApplicationStarted.Register(async () =>
    // Console.WriteLine(settings.steamSettings.apiKey);
     //settings.xboxSettings.outputRemainingRequests();
     
-     xblManager.Start();
-    //await mergerManager.mergeSteamToGameMarketGames(); 
+     //xblManager.Start();
+    await mergerManager.MergeXboxGamesAsync(); 
 });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

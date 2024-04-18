@@ -1,34 +1,80 @@
-﻿namespace GameMarketAPIServer.Models
+﻿using GameMarketAPIServer.Utilities;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+
+namespace GameMarketAPIServer.Models
 {
 
+    public interface IJsonData
+    {
+        void output(int outputNestedDepth = 0);
+    }
+    public abstract class JsonData : IJsonData
+    {
+        protected ILogger logger;
+
+        protected JsonData(ILogger logger)
+        {
+            this.logger = logger;
+        }
+        public abstract void output(int outputNestedDepth = 0);
+
+        public void InitializeJsonData(ILogger logger)
+        {
+            Queue<JsonData> queue = new Queue<JsonData>();
+            queue.Enqueue(this);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                current.logger = logger;  // Set the logger
+
+                foreach (var property in current.GetType().GetProperties())
+                {
+                    var value = property.GetValue(current);
+                    if (value is JsonData child)
+                    {
+                        queue.Enqueue(child);
+                    }
+                    else if (value is IEnumerable<JsonData> children)
+                    {
+                        foreach (var child1 in children)
+                        {
+                            queue.Enqueue(child1);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 
     //For Xbox player history:
     #region PlayerHistory
-    public class XboxTitleHistory
+    public class XboxTitleHistory : JsonData
     {
+        public XboxTitleHistory(ILogger logger) : base(logger) { }
         public string xuid { get; set; }
         public List<XboxTitle> titles { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Player Title History: ");
-            Console.WriteLine("XUID: " + xuid);
+            logger.LogDebug($"\nPlayer Title History: ");
+            logger.LogDebug($"XUID: {xuid}");
 
             if (outputNestedDepth > 0)
             {
-                Console.WriteLine("Titles: ");
+                logger.LogDebug($"Xbox Titles: ");
                 foreach (var title in titles)
                 {
-                    title.output(outputNestedDepth-1);
-                    Console.WriteLine();
+                    title.output(outputNestedDepth - 1);
                 }
 
             }
         }
     }
-    public class XboxTitle
+    public class XboxTitle : JsonData
     {
-
+        public XboxTitle(ILogger logger) : base(logger) { }
         public string titleId { get; set; }
         public string modernTitleId { get; set; }
         public string name { get; set; }
@@ -38,34 +84,36 @@
         public XboxGamePass gamePass { get; set; }
 
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("TitleID: " + titleId);
-            Console.WriteLine("Modern TitleID: " + modernTitleId);
-            Console.WriteLine("Name: " + name);
-            Console.WriteLine("Display Image: " + displayImage);
-            Console.WriteLine("Is Bundle: " + isBundle);
+            logger.LogDebug($"\nXbox Title:");
+            logger.LogDebug($"TitleID {titleId}");
+            logger.LogDebug($"Modern TitleID: {modernTitleId}");
+            logger.LogDebug($"Name:  {name}");
+            logger.LogDebug($"Display Image:  {displayImage}");
+            logger.LogDebug($"Is Bundle:  {isBundle}");
 
-            Console.Write("Devices: ");
-            foreach(var device in devices)
+            Console.Write($"Devices: ");
+            var deviceString = "\t";
+            foreach (var device in devices)
             {
-                Console.Write(device + "  ");
+                deviceString += $"{device},";
             }
-            Console.WriteLine("\n");
+            logger.LogDebug($"Devices: \n{deviceString}\n");
             if (outputNestedDepth > 0)
             {
-                gamePass.output(outputNestedDepth-1);
+                gamePass.output(outputNestedDepth - 1);
             }
-            Console.WriteLine();
         }
     }
-    public class XboxGamePass
+    public class XboxGamePass : JsonData
     {
+        public XboxGamePass(ILogger logger) : base(logger) { }
         public bool isGamePass { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
 
-            Console.WriteLine("Is Game Pass: " + isGamePass);
+            logger.LogDebug($"Is Game Pass: {isGamePass}");
         }
 
 
@@ -76,12 +124,13 @@
 
     //For Xbox Generic
     #region Generic
-    public class GenericData
+    public class GenericData : JsonData
     {
+        public GenericData(ILogger logger) : base(logger) { }
         public List<Item> items { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Product: ");
+            logger.LogDebug($"Product: ");
             if (outputNestedDepth > 0)
             {
                 foreach (var item in items)
@@ -91,15 +140,16 @@
             }
         }
     }
-    public class Item
+    public class Item : JsonData
     {
+        public Item(ILogger logger) : base(logger) { }
         public string Id { get; set; }
         public string ItemType { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Item: ");
-            Console.WriteLine("ID: " + Id);
-            Console.WriteLine("Item Type: " + ItemType);
+            logger.LogDebug($"Item: ");
+            logger.LogDebug($"ID: {Id}");
+            logger.LogDebug($"Item Type: {ItemType}");
             if (outputNestedDepth > 0)
             {
             }
@@ -111,32 +161,36 @@
     #endregion
     //For Xbox Title Details and Market Details
     #region MarketProperties
-    public class XboxMarketDetails
+    public class XboxMarketDetails : JsonData
     {
+        public XboxMarketDetails(ILogger logger) : base(logger) { }
         public List<string> bigIds { get; set; }
         public List<XboxProduct> products { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.Write("BigIDs: ");
+            //Console.Write($"BigIDs: ");
+            string bigIdString = "\t";
             foreach (var bigID in bigIds)
             {
-                Console.Write(bigID + "  ");
+                bigIdString += $"{bigID}, ";
             }
-            Console.WriteLine("\n");
+            logger.LogDebug($"\nBigIds:\n{bigIdString}");
             if (outputNestedDepth > 0)
             {
-                Console.WriteLine("Products: \n\n");
+                logger.LogInformation($"Products: \n\n");
                 foreach (var product in products)
                 {
                     product.output(outputNestedDepth - 1);
-                    Console.WriteLine("\n\n\n");
+                    logger.LogDebug($"\n\n\n");
                 }
             }
         }
     }
-    public class XboxProduct
+    public class XboxProduct : JsonData
     {
+        public XboxProduct(ILogger logger) : base(logger) { }
         public List<XboxLocalizedProperties> localizedProperties { get; set; }
 
         public List<XboxMarketProperties> marketProperties { get; set; }
@@ -150,45 +204,45 @@
         public List<XboxDisplaySkuAvailability> displaySkuAvailabilities { get; set; }
 
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Product: ");
+            logger.LogDebug($"Product: ");
             if (outputNestedDepth > 0)
             {
-                Console.WriteLine("Localized Properties: \n");
-                foreach(var localizedProperty in localizedProperties)
+                logger.LogDebug($"Localized Properties: \n");
+                foreach (var localizedProperty in localizedProperties)
                 {
-                    localizedProperty.output(outputNestedDepth-1);
+                    localizedProperty.output(outputNestedDepth - 1);
                 }
-                Console.WriteLine("Market Properties: \n");
-                foreach(var marketProperty in marketProperties)
+                logger.LogDebug($"Market Properties: \n");
+                foreach (var marketProperty in marketProperties)
                 {
-                    marketProperty.output(outputNestedDepth-1);
+                    marketProperty.output(outputNestedDepth - 1);
                 }
 
-                properties.output(outputNestedDepth-1);
+                properties.output(outputNestedDepth - 1);
 
-                Console.WriteLine("Alternate IDs: \n");
-                foreach(var alternateId in alternateIds)
+                logger.LogDebug($"Alternate IDs: \n");
+                foreach (var alternateId in alternateIds)
                 {
-                    alternateId.output(outputNestedDepth-1);
+                    alternateId.output(outputNestedDepth - 1);
                 }
-                Console.WriteLine("Display Sku Availabilites: ");
+                logger.LogDebug($"Display Sku Availabilites: ");
                 foreach (var displaySkuAvailability in displaySkuAvailabilities)
                 {
-                    displaySkuAvailability.output(outputNestedDepth-1);
+                    displaySkuAvailability.output(outputNestedDepth - 1);
                 }
 
             }
-            Console.WriteLine("Product ID: " + productId);
-            Console.WriteLine("SandBoxID: " + SandboxId);
-            Console.WriteLine("Is SandBoxed Product: " + IsSandboxedProduct);
-            Console.WriteLine();
+            logger.LogDebug($"Product ID: {productId}");
+            logger.LogDebug($"SandBoxID: {SandboxId}");
+            logger.LogDebug($"Is SandBoxed Product:  {IsSandboxedProduct}");
         }
     }
 
-    public class XboxLocalizedProperties
+    public class XboxLocalizedProperties : JsonData
     {
+        public XboxLocalizedProperties(ILogger logger) : base(logger) { }
         public string developerName { get; set; }
         public string publisherName { get; set; }
         public string productDescription { get; set; }
@@ -196,148 +250,158 @@
         public string shorttitle { get; set; }
 
         public List<XboxImages> Images { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Localized Property:");
+            logger.LogDebug($"Localized Property:");
 
             if (outputNestedDepth > 0)
             {
 
             }
-            Console.WriteLine("Product Title: " + productTitle);
-            Console.WriteLine("Short Title: " + shorttitle);
-            Console.WriteLine("Developer Name: " + developerName);
-            Console.WriteLine("Publisher Name: " + publisherName);
-            Console.WriteLine("Product Description: " + productDescription);
-            Console.WriteLine();
+            logger.LogDebug($"Product Title:  {productTitle}");
+            logger.LogDebug($"Short Title:  {shorttitle}");
+            logger.LogDebug($"Developer Name:  {developerName}");
+            logger.LogDebug($"Publisher Name:  {publisherName}");
+            logger.LogDebug($"Product Description:  {productDescription}\n");
         }
 
     }
 
-    public class XboxImages
+    public class XboxImages : JsonData
     {
+        public XboxImages(ILogger logger) : base(logger) { }
         public string imagePurpose { get; set; }
         public string uri { get; set; }
         public int height { get; set; }
         public int width { get; set; }
+
+        public override void output(int outputNestedDepth = 0)
+        {
+            throw new NotImplementedException();
+        }
     }
-    public class XboxMarketProperties
+    public class XboxMarketProperties : JsonData
     {
+        public XboxMarketProperties(ILogger logger) : base(logger) { }
         public List<XboxRelatedProduct> relatedProducts { get; set; }
         public string OriginalReleaseDate { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Market Property: ");
+            logger.LogDebug($"Market Property: ");
             if (outputNestedDepth > 0)
             {
-                Console.WriteLine("Related Products: \n");
+                logger.LogDebug($"Related Products: \n");
                 foreach (var relatedProduct in relatedProducts)
                 {
-                    relatedProduct.output(outputNestedDepth-1);
+                    relatedProduct.output(outputNestedDepth - 1);
                 }
             }
         }
     }
     //bundles
-    public class XboxRelatedProduct
+    public class XboxRelatedProduct : JsonData
     {
+        public XboxRelatedProduct(ILogger logger) : base(logger) { }
         public string relatedProductId { get; set; }
         public string relationshipType { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Related Product: ");
+            logger.LogDebug($"\nRelated Product: ");
             if (outputNestedDepth > 0)
             {
 
             }
-            Console.WriteLine("Related Product Id: " + relatedProductId);
-            Console.WriteLine("Relationship Type: " + relationshipType);
-            Console.WriteLine();
+            logger.LogDebug($"Related Product Id:  {relatedProductId}");
+            logger.LogDebug($"Relationship Type:  {relationshipType}\n");
         }
     }
 
-    public class XboxProductProperties
+    public class XboxProductProperties : JsonData
     {
+        public XboxProductProperties(ILogger logger) : base(logger) { }
         public bool isDemo { get; set; }
 
         public bool isAccessible { get; set; }
         public string ProductGroupId { get; set; }
-        public string ProductGroupName  { get; set; }
+        public string ProductGroupName { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Product Properties: ");
+            logger.LogDebug($"Product Properties: ");
             if (outputNestedDepth > 0)
             {
 
             }
-            Console.WriteLine("Is Demo: " + isDemo);
-            Console.WriteLine("Is Accessible: " + isAccessible);
-            Console.WriteLine("Product Group ID: " + ProductGroupId);
-            Console.WriteLine("Product Group Name: " + ProductGroupName);
-            Console.WriteLine("\n");
+            logger.LogDebug($"Is Demo:  {isDemo}");
+            logger.LogDebug($"Is Accessible:  {isAccessible}");
+            logger.LogDebug($"Product Group ID:  {ProductGroupId}");
+            logger.LogDebug($"Product Group Name:  {ProductGroupName}");
+            logger.LogDebug($"\n");
         }
     }
-    public class XboxAlternateId
+    public class XboxAlternateId : JsonData
     {
+        public XboxAlternateId(ILogger logger) : base(logger) { }
         public string idType { get; set; }
         public string value { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Alternalte ID: ");
+            logger.LogDebug($"Alternalte ID: ");
             if (outputNestedDepth > 0)
             {
 
             }
-            Console.WriteLine("ID Type" + idType);
-            Console.WriteLine("Value: " + value);
-            Console.WriteLine();
+            logger.LogDebug($"ID Type {idType}");
+            logger.LogDebug($"Value:  {value}");
         }
     }
 
-    public class XboxDisplaySkuAvailability
+    public class XboxDisplaySkuAvailability : JsonData
     {
+        public XboxDisplaySkuAvailability(ILogger logger) : base(logger) { }
         public XboxSku sku { get; set; }
         public List<XboxAvailability> availabilities { get; set; }
 
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
 
             if (outputNestedDepth > 0)
             {
-                sku.output(outputNestedDepth-1);
-                Console.WriteLine("Availabiliteis: \n");
+                sku.output(outputNestedDepth - 1);
+                logger.LogDebug($"Availabiliteis: \n");
                 foreach (var availability in availabilities)
                 {
-                    availability.output(outputNestedDepth-1);
+                    availability.output(outputNestedDepth - 1);
                 }
-                Console.WriteLine();
+                logger.LogDebug($"\n");
 
             }
         }
     }
 
-    public class XboxSku
+    public class XboxSku : JsonData
     {
+        public XboxSku(ILogger logger) : base(logger) { }
         public string productID { get; set; }
         public XboxSkuProperties properties { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("SKU: \n");
+            logger.LogDebug($"SKU: \n");
             if (outputNestedDepth > 0)
             {
                 properties.output(outputNestedDepth - 1);
             }
-            Console.WriteLine("Sku Product ID: " + productID);
+            logger.LogDebug($"Sku Product ID:  {productID}");
         }
     }
-    public class XboxSkuProperties
+    public class XboxSkuProperties : JsonData
     {
-        public void output(int outputNestedDepth = 0)
+        public XboxSkuProperties(ILogger logger) : base(logger) { }
+        public override void output(int outputNestedDepth = 0)
         {
 
             if (outputNestedDepth > 0)
@@ -347,106 +411,109 @@
         }
     }
 
-    public class XboxAvailability
+    public class XboxAvailability : JsonData
     {
+        public XboxAvailability(ILogger logger) : base(logger) { }
         public List<string> actions { get; set; }
         public XboxConditions conditions { get; set; }
 
         public XboxOrderManagementData orderManagementData { get; set; }
         public bool remediationRequired { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Availability:");
-            Console.Write("Actions :  ");
+            logger.LogDebug($"Availability:");
+            Console.Write($"Actions :  ");
             foreach (var action in actions)
             {
                 Console.Write(action + "  ");
             }
             if (outputNestedDepth > 0)
             {
-                conditions.output(outputNestedDepth-1);
-                orderManagementData.output(outputNestedDepth-1);
+                conditions.output(outputNestedDepth - 1);
+                orderManagementData.output(outputNestedDepth - 1);
             }
 
-            
-            Console.WriteLine();
-            Console.WriteLine("Remediation Required: " + remediationRequired);
-            Console.WriteLine();
+
+            logger.LogDebug($"\nRemediation Required:  {remediationRequired}\n");
         }
 
     }
 
-    public class XboxConditions
+    public class XboxConditions : JsonData
     {
-        
+        public XboxConditions(ILogger logger) : base(logger) { }
         public string endDate { get; set; }
         public string startDate { get; set; }
         public XboxClientConditions clientConditions { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Conditions: \n");
+            logger.LogDebug($"Conditions: \n");
             if (outputNestedDepth > 0)
             {
-                Console.WriteLine("Platforms. ");
+                logger.LogDebug($"Platforms. ");
             }
 
-            Console.WriteLine("End Date: " + endDate);
-            Console.WriteLine("Start Date: " + startDate);
+            logger.LogDebug($"End Date:  {endDate}");
+            logger.LogDebug($"Start Date:  {startDate}");
         }
     }
-    public class XboxClientConditions
+    public class XboxClientConditions : JsonData
     {
+        public XboxClientConditions(ILogger logger) : base(logger) { }
         public List<XboxAllowedPlatforms> allowedPlatforms { get; set; }
-        public void output(int outputNestedDepth = 0) { }
+        public override void output(int outputNestedDepth = 0) { }
     }
-    public class XboxAllowedPlatforms
+    public class XboxAllowedPlatforms : JsonData
     {
+        public XboxAllowedPlatforms(ILogger logger) : base(logger) { }
         public string platformName { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Conditions: \n");
+            logger.LogDebug($"Conditions: \n");
             if (outputNestedDepth > 0)
             {
 
             }
 
-            Console.WriteLine("Platform Name: " + platformName);
+            logger.LogDebug($"Platform Name:  {platformName}");
         }
 
     }
-    public class XboxOrderManagementData
+    public class XboxOrderManagementData : JsonData
     {
+        public XboxOrderManagementData(ILogger logger) : base(logger) { }
         public XboxPrice price { get; set; }
 
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Order Management Data: \n");
+            logger.LogDebug($"Order Management Data: \n");
             if (outputNestedDepth > 0)
             {
-                price.output(outputNestedDepth-1);
+                price.output(outputNestedDepth - 1);
             }
         }
     }
-    public class XboxPrice
+    public class XboxPrice : JsonData
     {
+        public XboxPrice(ILogger logger) : base(logger) { }
         public string currencyCode { get; set; }
         public double listPrice { get; set; }
         public double msrp { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Price: \n");
+            logger.LogDebug($"Price: \n");
             if (outputNestedDepth > 0)
             {
 
             }
-            Console.WriteLine("List Price: " + listPrice);
-            Console.WriteLine("MSRP: " + msrp);
-            Console.WriteLine("Currency Code: " + currencyCode);
+            logger.LogDebug($"List Price:  {listPrice}");
+            logger.LogDebug($"MSRP:  {msrp}");
+            logger.LogDebug($"Currency Code:  {currencyCode}");
         }
     }
     #endregion
@@ -455,33 +522,35 @@
     //For Steam App list
     #region SteamAppList
 
-    
-    public class SteamAppListMain
+
+    public class SteamAppListMain : JsonData
     {
+        public SteamAppListMain(ILogger logger) : base(logger) { }
         public SteamAppList appList { get; set; }
         public SteamAppList response { get; set; }
 
 
-        
-        public void output(int outputNestedDepth = 0)
+
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Get Steam App List: ");
+            logger.LogDebug($"Get Steam App List: ");
             if (outputNestedDepth > 0)
             {
-                appList.output(outputNestedDepth-1);
+                appList.output(outputNestedDepth - 1);
             }
         }
     }
-    public class SteamAppList
+    public class SteamAppList : JsonData
     {
+        public SteamAppList(ILogger logger) : base(logger) { }
         public List<SteamApp> apps { get; set; }
 
         //For the v1 version
         public bool have_more_results { get; set; }
         public UInt32 last_appid { get; set; }
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("Product: ");
+            logger.LogDebug($"Product: ");
             if (outputNestedDepth > 0)
             {
                 foreach (var app in apps)
@@ -491,16 +560,17 @@
             }
         }
     }
-    public class SteamApp
+    public class SteamApp : JsonData
     {
+        public SteamApp(ILogger logger) : base(logger) { }
         public UInt32 appid { get; set; }
         public string name { get; set; }
 
-        public void output(int outputNestedDepth = 0)
+        public override void output(int outputNestedDepth = 0)
         {
-            Console.WriteLine("\nProduct: ");
-            Console.WriteLine("App ID: " + appid);
-            Console.WriteLine("Name: " +  name);
+            logger.LogDebug($"\nProduct: ");
+            logger.LogDebug($"App ID:  {appid}");
+            logger.LogDebug($"Name:  {name}");
             if (outputNestedDepth > 0)
             {
 
@@ -517,13 +587,13 @@
         public SteamAppData data { get; set; }
     }
     public class SteamAppData
-    { 
+    {
         public string type { get; set; }
-        public string name { get; set; } 
+        public string name { get; set; }
         public UInt32 steam_appid { get; set; }
         public bool is_free { get; set; }
 
-        public List<UInt32> dlc {  get; set; } 
+        public List<UInt32> dlc { get; set; }
         public string short_description { get; set; }
 
         public SteamFullGame fullgame { get; set; }
@@ -551,7 +621,7 @@
         public string description { get; set; }
         public UInt32 id { get; set; }
     }
-   public class SteamPriceOverview
+    public class SteamPriceOverview
     {
         public string currency { get; set; }
         public int initial { get; set; }
@@ -572,7 +642,7 @@
     {
         public bool coming_soon { get; set; }
         public string date { get; set; }
-        
+
     }
     #endregion
 }

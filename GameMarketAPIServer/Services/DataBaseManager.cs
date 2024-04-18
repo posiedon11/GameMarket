@@ -35,6 +35,7 @@ namespace GameMarketAPIServer.Services
     }
     public class DataBaseManager : IDataBaseManager
     {
+        private ILogger<DataBaseManager> logger;
         protected MainSettings mainSettings;
         protected SQLServerSettings sqlserverSettings;
         public string connectionString { get; set; }
@@ -58,8 +59,9 @@ namespace GameMarketAPIServer.Services
         }
 
 
-        public DataBaseManager(IOptions<MainSettings> settings)
+        public DataBaseManager(IOptions<MainSettings> settings, ILogger<DataBaseManager> logger)
         {
+            this.logger = logger;
             mainSettings = settings.Value;
             sqlserverSettings = settings.Value.sqlServerSettings;
 
@@ -281,7 +283,93 @@ namespace GameMarketAPIServer.Services
                     Console.WriteLine("Table not valid for insertion");
                     return false;
                 }
-                switch (table)
+                switch(table.ToSchema())
+                {
+                    case Schemas.xbox:
+                        success = await InsertXbox(table,data,connection);
+                        break;
+                    case Schemas.steam:
+                        success = await InsertSteam(table,data,connection);
+                        break;
+                    case Schemas.gamemarket:
+                        success = await InsertGameMarket(table,data,connection);
+                        break;
+                    default:
+                        break;
+                }
+
+                // await transaction.CommitAsync();
+                return success;
+            }
+            catch (MySqlException ex)
+            {
+                Console.WriteLine("Failed to insert for: ");
+                data.outputData();
+               // Console.WriteLine("Sql Error: " + ex.ToString());
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // If something goes wrong, roll back the transaction
+                //await transaction.RollbackAsync();
+                Console.WriteLine(ex.ToString());
+                throw;
+            }
+        }
+
+        private async Task<bool> UpdateTableAsync(Tables table, TableData data, MySqlConnection connection)
+        {
+            //using var transaction = await connection.BeginTransactionAsync();
+            bool success = false;
+            try
+            {
+                
+                if (!await validTableAsync(table))
+                {
+                    //await transaction.RollbackAsync();
+                    return success;
+                }
+
+                switch (table.ToSchema())
+                {
+                    case Schemas.xbox:
+                        success = await UpdateXbox(table, data, connection);
+                        break;
+                    case Schemas.steam:
+                        success = await UpdateSteam(table, data, connection);
+                        break;
+                    case Schemas.gamemarket:
+                        success = await UpdateGameMarket(table, data, connection);
+                        break;
+                    default:
+                        break;
+                }
+                // await transaction.CommitAsync();
+                return success;
+            }
+            catch (MySqlException ex)
+            {
+                Console.WriteLine("Update failed for: ");
+                data.outputData();
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // If something goes wrong, roll back the transaction
+                //await transaction.RollbackAsync();
+                Console.WriteLine(ex.ToString());
+                
+                throw;
+            }
+        }
+
+
+        private async Task<bool> InsertXbox(Tables table, TableData data, MySqlConnection connection)
+        {
+            try
+            {
+                bool success = false;
+                switch(table)
                 {
                     case Tables.XboxUserProfiles:
                         {
@@ -577,7 +665,22 @@ namespace GameMarketAPIServer.Services
                         }
 
 
+                    default:
+                        logger.LogWarning($"DB insert not Implemented for {table.ToString()}");
+                        break;
+                       
+                }
 
+                return success;
+            }catch (MySqlException ex) { return false; }
+        }
+        private async Task<bool> InsertSteam(Tables table, TableData data, MySqlConnection connection)
+        {
+            try
+            {
+                bool success = false;
+                switch(table)
+                {
                     case Tables.SteamAppIDs:
                         {
                             if (data is SteamAppListData appListData)
@@ -825,8 +928,25 @@ namespace GameMarketAPIServer.Services
                             break;
                         }
 
+                    default:
+                        logger.LogWarning($"DB insert not Implemented for {table.ToString()}");
+                        break;
+                }
 
 
+
+                return success;
+
+            }catch (MySqlException ex) { return false;}
+        }
+        private async Task<bool> InsertGameMarket(Tables table, TableData data, MySqlConnection connection)
+        {
+            try
+            {
+                bool success = false;
+
+                switch(table)
+                {
                     case Tables.GameMarketGameTitles:
                         {
                             if (data is GameMarketMergedXboxData mergedData)
@@ -867,7 +987,7 @@ namespace GameMarketAPIServer.Services
                                  (gameID, modernTitleID) 
                                  VALUES(@gameID, @modernTitleID)";
 
-                                foreach (var titleId in mergedData.titleIds)
+                                foreach (var titleId in mergedData.xboxIds)
                                 {
                                     if (mergedData.gameId >= 1000)
                                     {
@@ -875,7 +995,7 @@ namespace GameMarketAPIServer.Services
                                         {
                                             command.Connection = connection;
                                             command.CommandText = sqlQuery1;
-                                                command.Parameters.AddWithValue("gameID", mergedData.gameId);
+                                            command.Parameters.AddWithValue("gameID", mergedData.gameId);
                                             command.Parameters.AddWithValue("modernTitleID", titleId);
                                             await command.ExecuteNonQueryAsync();
                                         }
@@ -890,52 +1010,32 @@ namespace GameMarketAPIServer.Services
                                             await command.ExecuteNonQueryAsync();
                                         }
                                     }
-                                    
+
                                 }
                                 success = true;
                             }
                             break;
                         }
 
-
-
                     default:
-                        {
-                            Console.WriteLine("Table insert not implemented");
-                            return false;
-                        }
+                        logger.LogWarning($"DB insert not Implemented for {table.ToString()}");
+                        break;
                 }
-                // await transaction.CommitAsync();
+
+
                 return success;
+
             }
-            catch (MySqlException ex)
-            {
-                Console.WriteLine("Failed to insert for: ");
-                data.outputData();
-               // Console.WriteLine("Sql Error: " + ex.ToString());
-                return false;
-            }
-            catch (Exception ex)
-            {
-                // If something goes wrong, roll back the transaction
-                //await transaction.RollbackAsync();
-                Console.WriteLine(ex.ToString());
-                throw;
-            }
+            catch (MySqlException ex) { return false; }
         }
 
-        private async Task<bool> UpdateTableAsync(Tables table, TableData data, MySqlConnection connection)
+
+        private async Task<bool> UpdateXbox(Tables table, TableData data, MySqlConnection connection)
         {
-            //using var transaction = await connection.BeginTransactionAsync();
-            bool success = false;
             try
             {
-                if (!await validTableAsync(table))
-                {
-                    //await transaction.RollbackAsync();
-                    return false;
-                }
-                switch (table)
+                bool success = false;
+                switch(table)
                 {
                     case Tables.XboxUserProfiles:
                         {
@@ -1137,7 +1237,23 @@ namespace GameMarketAPIServer.Services
                             break;
                         }
 
+                    default:
+                        logger.LogWarning($"DB Update not Implemented for {table.ToString()}");
+                        break;
+                }
 
+                return success;
+
+            }catch (MySqlException ex) { return false;}
+            catch (Exception ex) { return false;}
+        }
+        private async Task<bool> UpdateSteam(Tables table, TableData data, MySqlConnection connection)
+        {
+            try
+            {
+                bool success = false;
+                switch (table)
+                {
                     case Tables.SteamAppIDs:
                         {
                             if (data is SteamUpdateScannedData updateData)
@@ -1163,7 +1279,24 @@ namespace GameMarketAPIServer.Services
                             break;
                         }
 
+                    default:
+                        logger.LogWarning($"DB Update not Implemented for {table.ToString()}");
+                        break;
+                }
 
+                return success;
+
+            }
+            catch (MySqlException ex) { return false; }
+            catch (Exception ex) { return false; }
+        }
+        private async Task<bool> UpdateGameMarket(Tables table, TableData data, MySqlConnection connection)
+        {
+            try
+            {
+                bool success = false;
+                switch (table)
+                {
                     case Tables.GameMarketGameTitles:
                         {
                             if (data is GameMarketMergedXboxData mergedData)
@@ -1208,31 +1341,18 @@ namespace GameMarketAPIServer.Services
                             }
                             break;
                         }
-                    default:
-                        {
-                            Console.WriteLine(table.ToString() + " Does not have update");
-                            return false;
-                        }
-                }
-                // await transaction.CommitAsync();
-                return success;
-            }
-            catch (MySqlException ex)
-            {
-                Console.WriteLine("Update failed for: ");
-                data.outputData();
-                return false;
-            }
-            catch (Exception ex)
-            {
-                // If something goes wrong, roll back the transaction
-                //await transaction.RollbackAsync();
-                Console.WriteLine(ex.ToString());
-                
-                throw;
-            }
-        }
 
+                    default:
+                        logger.LogWarning($"DB Update not Implemented for {table.ToString()}");
+                        break;
+                }
+
+                return success;
+
+            }
+            catch (MySqlException ex) { return false; }
+            catch (Exception ex) { return false; }
+        }
 
         public async Task<bool> validTableAsync(Tables table)
         {
@@ -1256,7 +1376,6 @@ namespace GameMarketAPIServer.Services
         {
             int schemaNum = -1;
             string sqlQuery = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = @databaseName AND table_name = @tableName";
-
 
             string tableEnum = table.ToString().ToLower();
 

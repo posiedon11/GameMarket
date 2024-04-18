@@ -1,4 +1,7 @@
-﻿namespace GameMarketAPIServer.Models.Enums
+﻿using GameMarketAPIServer.Services;
+using static GameMarketAPIServer.Services.DataBaseManager;
+
+namespace GameMarketAPIServer.Models.Enums
 {
     public enum CRUD
     {
@@ -21,6 +24,8 @@
         XboxGroupData,
         XboxTitleDevices,
         XboxProductPlatforms,
+
+
         //steam
         SteamAppIDs,
         SteamAppDetails,
@@ -36,7 +41,9 @@
         //gamemarket
         GameMarketGameTitles,
         GameMarketXboxLink,
-        GameMarketSteamLink
+        GameMarketSteamLink,
+        GameMarketPublishers,
+        GameMarketDevelopers,
         //other
     };
 
@@ -75,11 +82,25 @@
                 case Tables.GameMarketGameTitles: return "GameTitles";
                 case Tables.GameMarketXboxLink: return "XboxLink";
                 case Tables.GameMarketSteamLink: return "SteamLink";
+                case Tables.GameMarketDevelopers: return "Developers";
+                case Tables.GameMarketPublishers: return "Publishers";
 
                 default: return "";
             }
         }
 
+
+        public static DataBaseManager.Schemas ToSchema(this Tables table)
+        {
+            string tableEnum = table.ToString().ToLower();
+
+            if (tableEnum.Contains("xbox")) return Schemas.xbox;
+            else if (tableEnum.Contains("steam")) return Schemas.steam;
+            else if (tableEnum.Contains("gamemarket")) return Schemas.gamemarket;
+
+            else 
+                return DataBaseManager.Schemas.xbox;
+        }
         public static int toInt(this Tables table)
         {
 

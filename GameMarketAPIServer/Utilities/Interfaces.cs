@@ -1,5 +1,5 @@
 ﻿using Xunit.Abstractions;
-
+using Microsoft.Extensions.Logging;
 namespace GameMarketAPIServer.Utilities
 {
     public class Interfaces
@@ -11,25 +11,56 @@ namespace GameMarketAPIServer.Utilities
         bool canRequest();
 
     }
-    public interface ILogger
+
+    public sealed class XUnitLogger<T> : Microsoft.Extensions.Logging.ILogger<T>
     {
-        public void WriteLine(string message);
-    }
-    public class ConsoleLogger : ILogger
-    {
-        public void WriteLine(string message)
+        private readonly ITestOutputHelper _output;
+        private readonly string categoryName;
+
+        public XUnitLogger(ITestOutputHelper output)
         {
-            Console.WriteLine(message);
+            _output = output;
+            categoryName = typeof(T).FullName;
+        }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (!IsEnabled(logLevel)) { return; }
+            if (formatter != null)
+            {
+                _output.WriteLine(formatter(state, exception));
+            }
+        }
+        private class NoOpDisposable:IDisposable
+        {
+            public static readonly NoOpDisposable Instance = new NoOpDisposable();
+            public void Dispose() { }
         }
     }
-    public class TestOutputHelperLogger : ILogger
+    public sealed class XUnitLoggerProvider : ILoggerProvider
     {
-        private readonly ITestOutputHelper output;
-        public TestOutputHelperLogger(ITestOutputHelper outputHelper) { output = outputHelper; }
-        public void WriteLine(string message) {
-            output.WriteLine(message);
+        private readonly ITestOutputHelper _output;
+
+        public XUnitLoggerProvider(ITestOutputHelper output)
+        {
+            _output = output;
         }
+
+        public ILogger<T> CreateLogger<T>()
+        {
+            return new XUnitLogger<T>(_output);
+        }
+        public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName)
+        {
+            Type loggerGenericType = typeof(XUnitLogger<>);
+            Type loggerConstructedType = loggerGenericType.MakeGenericType(Type.GetType(categoryName));
+            return (ILogger)Activator.CreateInstance(loggerConstructedType, _output);
+        }
+
+        public void Dispose() { }
     }
-
-
 }

@@ -1,4 +1,6 @@
-﻿namespace GameMarketAPIServer.Utilities
+﻿using System.Text.RegularExpressions;
+
+namespace GameMarketAPIServer.Utilities
 {
     public class Tools
     {
@@ -52,6 +54,26 @@
                 Console.WriteLine("File faild to open");
             }
             return results;
+        }
+
+
+        public static bool isSequel(string title1, string title2)
+        {
+            var regex = new Regex(@"\d+$");
+            var match1 = regex.Match(title1);
+            var match2 = regex.Match(title2);
+            if (title1 == "zombie derby 2" && title2 == "zombie derby")
+            {
+                Console.WriteLine();
+            }
+            if (match1.Success && match2.Success)
+                return match1.Value != match2.Value;
+            else
+            {
+                return match1.Success != match2.Success;
+            }
+
+
         }
 
     }

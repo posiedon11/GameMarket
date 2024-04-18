@@ -38,7 +38,7 @@ namespace GameMarketAPIServer.Services
 
 
 
-        public StmAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, StmAPITracker apiTracker) : base(dbManager, settings, "steam")
+        public StmAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, StmAPITracker apiTracker, ILogger<StmAPIManager> apiLogger) : base(dbManager, settings, "steam", apiLogger)
         {
 
             stmSettings = settings.Value.steamSettings;

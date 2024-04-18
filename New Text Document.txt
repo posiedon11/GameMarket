@@ -1,4 +1,0 @@
-vcpkg install curl
-vcpkg install rapidjson
-
-vcpkg integrate install

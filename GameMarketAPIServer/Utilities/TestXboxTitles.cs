@@ -6,30 +6,23 @@ using GameMarketAPIServer.Configuration;
 using static SteamKit2.Internal.CMsgCellList;
 using GameMarketAPIServer.Models;
 using Microsoft.Extensions.Options;
+using System.Reflection;
 
 
 namespace GameMarketAPIServer.Utilities
 {
-    public abstract class Test
-    {
-        protected readonly ITestOutputHelper output;
-        protected readonly Mock<IAPIManager> mockAPICaller;
-        protected readonly Mock<IDataBaseManager> mockDataBaseManager;
 
-        protected Test(ITestOutputHelper output, IOptions<MainSettings> settings)
-        {
-            this.output = output;
-            mockAPICaller = new Mock<IAPIManager>();
-            mockDataBaseManager = new Mock<IDataBaseManager>();
-        }
-    }
+    [Collection("Test Collection")]
     public class TestXboxTitles : Test
     {
-        
         private XblAPIManager xblManager;
+        private ILogger<JsonData> jsonLogger;
         private readonly int call = (int)XblAPIManager.APICalls.gameTitle;
-        public TestXboxTitles(ITestOutputHelper output, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(output, settings)         {
-            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, apiTracker);
+        public TestXboxTitles(ITestOutputHelper output, TestFixture fixture) : base(output ,fixture )    
+        {
+            jsonLogger = fixture.serviceProvider.GetService<ILogger<JsonData>>();
+            var xboxLogger = new XUnitLoggerProvider(output).CreateLogger<XblAPIManager>();
+            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, new XblAPITracker(settings), xboxLogger);
             //cant really do player histories
 
             //Game Titles:
@@ -123,7 +116,7 @@ namespace GameMarketAPIServer.Utilities
                         item.outputData();
 
                     var temp = writer.ToString();
-                    output.WriteLine(temp);
+                   // logger.LogInformation(temp);
                 }
 
             }
@@ -131,13 +124,15 @@ namespace GameMarketAPIServer.Utilities
 
     }
 
+    [Collection("Test Collection")]
     public class TestXboxProducts : Test
     {
         private readonly int call = (int)XblAPIManager.APICalls.marketDetails;
         private XblAPIManager xblManager;
-        public TestXboxProducts(ITestOutputHelper output, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(output, settings) 
+        public TestXboxProducts(ITestOutputHelper output, TestFixture fixture) : base(output, fixture) 
         {
-            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, apiTracker);
+            var xboxLogger = new XUnitLoggerProvider(output).CreateLogger<XblAPIManager>();
+            xblManager = new XblAPIManager(mockDataBaseManager.Object, settings, new XblAPITracker(settings), xboxLogger);
             //ProductIDs
             //Control Standard
             mockAPICaller.Setup(x => x.CallAPIAsync((int)XblAPIManager.APICalls.marketDetails, "9PL1J8PJKH29"))
@@ -169,6 +164,7 @@ namespace GameMarketAPIServer.Utilities
 
             Assert.True(success);
             var actual = Assert.IsType<XboxGameMarketData>(expected);
+
 
             Assert.NotNull(data);
             Assert.NotEqual(0, data.Count);

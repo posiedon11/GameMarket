@@ -16,6 +16,7 @@ using System.Diagnostics;
 using SteamKit2.Internal;
 using static GameMarketAPIServer.Services.DataBaseManager;
 using Microsoft.Extensions.Options;
+using GameMarketAPIServer.Utilities;
 
 namespace GameMarketAPIServer.Services
 {
@@ -51,7 +52,7 @@ namespace GameMarketAPIServer.Services
 
 
 
-        public XblAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, XblAPITracker apiTracker) : base(dbManager, settings, "xbox")
+        public XblAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, XblAPITracker apiTracker, ILogger<XblAPIManager> apiLogger) : base(dbManager, settings, "xbox", apiLogger)
         {
             this.xboxSettings = settings.Value.xboxSettings;
             this.apiTracker = apiTracker;
@@ -180,6 +181,8 @@ namespace GameMarketAPIServer.Services
                 XboxMarketDetails details = JsonConvert.DeserializeObject<XboxMarketDetails>(json);
                 List<TableData> returnList = new List<TableData>();
                 if (details == null) { return (false, returnList); }
+                details.InitializeJsonData(apiLogger);
+                details.output(2);
                 foreach (var product in details.products)
                 {
                     XboxTitleDetailsData data = new XboxTitleDetailsData();
@@ -448,6 +451,7 @@ namespace GameMarketAPIServer.Services
 
                 XboxTitleHistory history = JsonConvert.DeserializeObject<XboxTitleHistory>(json);
                 if (history == null) return (false, returnList);
+                history.InitializeJsonData(apiLogger);
                 foreach (var title in history.titles.Where(title => title.modernTitleId != null && !title.devices.Contains("Win32")))
                 {
                     XboxGameTitleData titleData = new XboxGameTitleData();
@@ -466,7 +470,7 @@ namespace GameMarketAPIServer.Services
                     returnList.Add(titleData);
                 }
                 // await dbManager.processQueueAsync();
-                // history.output(5);
+                 //history.output(5);
 
 
                 return (true,returnList);

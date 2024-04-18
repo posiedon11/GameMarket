@@ -1,4 +1,5 @@
-﻿using ProtoBuf.WellKnownTypes;
+﻿using GameMarketAPIServer.Services;
+using ProtoBuf.WellKnownTypes;
 using System.Numerics;
 
 namespace GameMarketAPIServer.Models
@@ -181,10 +182,41 @@ namespace GameMarketAPIServer.Models
         public int gameId;
         public string groupID, gameTitle;
 
-        public List<string> titleIds;
+        public List<string> xboxIds { get; set; }
         public void outputData()
         {
             throw new NotImplementedException();
         }
+    }
+
+    class GameMarketMergedData : TableData
+    {
+        private readonly object dataLock = new object();
+        private Int32 gameID;
+        public SortedSet<string>? developers;
+        public SortedSet<string>? publishers;
+        public Dictionary<DataBaseManager.Schemas, SortedSet<string>>? platformIds;
+        public SortedSet<string>? xboxIds;
+        public SortedSet<string>? steamIds;
+
+        public GameMarketMergedData(int gameID)
+        {
+            this.gameID = gameID;
+        }
+        public void updateGameID(int gameID)
+        {
+            lock(dataLock)
+            {
+                this.gameID = gameID;
+            }
+        }
+        public Int32 getGameID()
+        {
+            lock(dataLock)
+            {
+                return this.gameID;
+            }
+        }
+        public void outputData() { }
     }
 }
