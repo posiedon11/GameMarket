@@ -10,10 +10,13 @@ using MySqlConnector;
 using System.Diagnostics;
 using System.Data;
 using Microsoft.Extensions.Options;
-
+using AutoMapper;
+using System.Linq;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
+using Microsoft.Extensions.Logging;
 namespace GameMarketAPIServer.Services
 {
-    public class StmAPIManager : APIManager
+    public class StmAPIManager : APIManager<DataBaseSchemas.SteamSchema>
     {
         protected SteamSettings stmSettings;
         protected StmAPITracker apiTracker;
@@ -22,7 +25,8 @@ namespace GameMarketAPIServer.Services
             "game",
             "dlc"
         };
-
+        private readonly IMapper mapper;
+        private readonly IServiceScopeFactory scopeFactory;
 
 
 
@@ -34,15 +38,14 @@ namespace GameMarketAPIServer.Services
             getPackageDetaisl
         }
 
-
-
-
-
-        public StmAPIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, StmAPITracker apiTracker, ILogger<StmAPIManager> apiLogger) : base(dbManager, settings, "steam", apiLogger)
+        public StmAPIManager(IOptions<MainSettings> settings, StmAPITracker apiTracker,
+            ILogger<StmAPIManager> apiLogger, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory, IMapper mapper) : base(settings, apiLogger, DataBaseSchemas.Steam, httpClientFactory)
         {
 
             stmSettings = settings.Value.steamSettings;
             this.apiTracker = apiTracker;
+            this.mapper = mapper;
+            this.scopeFactory = scopeFactory;
         }
 
 
@@ -50,41 +53,25 @@ namespace GameMarketAPIServer.Services
         {
             while (running && !mainCTS.Token.IsCancellationRequested)
             {
-#if false
-                UInt32 maxREsponse = 50000;
-                var paramaters = new Dictionary<string, object>
-                {
-                    {"include_games", true },
-                   // {"include_dlc", false },
-                   // {"include_software", false },
-                    //{"include_videos", false },
-                   // {"include_hardware", false },
-                    //{"last_appid", 501310},
-                    {"max_results", maxREsponse }
-                };
-                string response = await CallAPIAsync((int)APICalls.getAppListv1, JsonConvert.SerializeObject(paramaters));
-                await ParseJsonAsync((int)APICalls.getAppListv1, response); 
-#endif
-                //Fetch all app list
-#if false
-                string response = await CallAPIAsync((int)APICalls.getAppListv2);
-                await ParseJsonAsync((int)APICalls.getAppListv2, response); 
-#endif
+                if (true)
 
-                //Single app Testing
-#if false
-                string response = await CallAPIAsync((int)APICalls.getAppDetails, "440");
-                await ParseJsonAsync((int)APICalls.getAppDetails, response);
-                await dbManager.processQueueAsync();
-#endif
+                {
+                    if (apiTracker.canRequest())
+                    {
+                        apiTracker.makeRequest();
+                        await GetAppList();
+                    }
+
+                }
+
                 //Call and Parse All AppIds
 #if true
                 await ScanAllAppDetailsAsync();
-                await dbManager.processSteamQueueAsync();
 #endif
+
                 try
                 {
-                    Console.WriteLine("\n\nSteam manager Sleeping");
+                    logger.LogDebug("\n\nSteam manager Sleeping");
                     await Task.Delay(TimeSpan.FromHours(1), mainCTS.Token);
                 }
                 catch (TaskCanceledException) { break; }
@@ -145,7 +132,7 @@ namespace GameMarketAPIServer.Services
                                             url += "&last_appid=" + item.Value;
                                             break;
                                         case "max_results":
-                                            url += "&max_results==" + item.Value;
+                                            url += "&max_results=" + item.Value;
                                             break;
 
                                     }
@@ -164,34 +151,38 @@ namespace GameMarketAPIServer.Services
             }
         }
 
-        public async override Task<(bool, List<TableData>)> ParseJsonAsync(int apiCall, string json)
+
+#if false
+
+        #region Old stuff
+        public async override Task<(bool, List<ITableData>)> ParseJsonAsyncOld(int apiCall, string json)
         {
             switch ((APICalls)apiCall)
             {
                 case APICalls.getAppDetails:
-                    return await ParseAppDetails(json);
+                    return await ParseAppDetailsOld(json);
                 case APICalls.getAppListv2:
                 case APICalls.getAppListv1:
-                    return await ParseAppListAsync(json);
+                    return await ParseAppListAsyncOld(json);
                 default:
-                    return (false, new List<TableData>());
+                    return (false, new List<ITableData>());
             }
         }
 
-        public async Task<(bool, List<TableData>)> ParseAppListAsync(string json)
+        public async Task<(bool, List<ITableData>)> ParseAppListAsyncOld(string json)
         {
 
             try
             {
                 //SteamAppListMain can store data for v1 or v2 of the call.
-                List<TableData> returnList = new List<TableData>();
+                List<ITableData> returnList = new List<ITableData>();
                 SteamAppListMain appList = JsonConvert.DeserializeObject<SteamAppListMain>(json);
                 if (appList == null) return (false, returnList);
 
                 //this is used for v1 of the call.
                 if (appList.response != null)
                 {
-                    Console.WriteLine("Null apps: " + appList.response.apps.Count(item => item == null));
+                    logger.LogDebug("Null apps: " + appList.response.apps.Count(item => item == null));
                     int nullcount = 0;
                     foreach (var app in appList.response.apps)
                     {
@@ -201,14 +192,14 @@ namespace GameMarketAPIServer.Services
 
 
                         if (app.name == null) { ++nullcount; continue; }
-                        appData.appid = app.appid;
+                        appData.appid = app.appID;
                         appData.name = app.name;
                         if (stmSettings.outputSettings.outputDebug)
                             appData.outputData();
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppIDs, appData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppIDs, appData, CRUD.Create);
                         returnList.Add(appData);
                     }
-                    Console.WriteLine("null app names: " + nullcount);
+                    logger.LogDebug("null app names: " + nullcount);
 #if true
                     if (appList.response.have_more_results)
                     {
@@ -223,15 +214,15 @@ namespace GameMarketAPIServer.Services
                             {"last_appid", appList.response.last_appid},
                             {"max_results",  50000}
                         };
-                        Console.WriteLine("\n\nNested Search for app list. \n\n");
+                        logger.LogDebug("\n\nNested Search for app list. \n\n");
                         string response = await CallAPIAsync((int)APICalls.getAppListv1, JsonConvert.SerializeObject(paramaters));
-                        await ParseJsonAsync((int)APICalls.getAppListv1, response);
+                        await ParseJsonAsyncOld((int)APICalls.getAppListv1, response);
 
                     }
                     else
                     {
-                        Console.WriteLine("No more results to add");
-                        await dbManager.processSteamQueueAsync();
+                        logger.LogDebug("No more results to add");
+                        await dbManager.processQueue(schema);
                     }
 #endif
                 }
@@ -239,8 +230,8 @@ namespace GameMarketAPIServer.Services
                 //this is used for v2 of the call
                 else if (appList.appList != null)
                 {
-                    Console.WriteLine("Total apps: " + appList.appList.apps.Count());
-                    Console.WriteLine("Null apps: " + appList.appList.apps.Count(item => item == null));
+                    logger.LogDebug("Total apps: " + appList.appList.apps.Count());
+                    logger.LogDebug("Null apps: " + appList.appList.apps.Count(item => item == null));
 
                     int nullcount = 0;
                     foreach (var app in appList.appList.apps)
@@ -251,18 +242,18 @@ namespace GameMarketAPIServer.Services
 
                         if (app.name == null) { ++nullcount; continue; }
 
-                        appData.appid = app.appid;
+                        appData.appid = app.appID;
                         appData.name = app.name;
 
 
                         if (stmSettings.outputSettings.outputAll)
                             appData.outputData();
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppIDs, appData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppIDs, appData, CRUD.Create);
                         returnList.Add(appData);
                         //app.output();
                     }
-                    Console.WriteLine("null app names: " + nullcount);
-                    await dbManager.processSteamQueueAsync();
+                    logger.LogDebug("null app names: " + nullcount);
+                    await dbManager.processQueue(schema);
                 }
 
 
@@ -271,17 +262,17 @@ namespace GameMarketAPIServer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                return (false, new List<TableData>());
+                logger.LogDebug(ex.ToString());
+                return (false, new List<ITableData>());
             }
         }
 
-        public async Task<(bool, List<TableData>)> ParseAppDetails(string json)
+        public async Task<(bool, List<ITableData>)> ParseAppDetailsOld(string json)
         {
             try
             {
                 var appDetailsList = JsonConvert.DeserializeObject<Dictionary<string, SteamAppDetails>>(json);
-                var returnList = new List<TableData>();
+                var returnList = new List<ITableData>();
                 if (appDetailsList == null) return (false, returnList);
 
                 foreach (var item in appDetailsList)
@@ -290,7 +281,7 @@ namespace GameMarketAPIServer.Services
                     if (appDetails == null) return (false, returnList);
                     if (appDetails.success == false)
                     {
-                        Console.WriteLine("API failed");
+                        logger.LogDebug("API failed");
                         return (false, returnList);
                     }
 
@@ -308,14 +299,14 @@ namespace GameMarketAPIServer.Services
                     if (appDetails.data.release_date == null) return (false, returnList);
                     if (appDetails.data.release_date.coming_soon == true)
                     {
-                        Console.WriteLine("Game isnt out yet. ");
+                        logger.LogDebug("Game isnt out yet. ");
                         continue;
                     }
 
                     //only free games should not have a price listed. otherwise, its probably some test/early app.
                     if (!appDetails.data.is_free && appDetails.data.price_overview == null)
                     {
-                        Console.WriteLine("App not free, cant find price. ");
+                        logger.LogDebug("App not free, cant find price. ");
                         continue;
                     }
 
@@ -382,7 +373,7 @@ namespace GameMarketAPIServer.Services
 
                     if (detailsData.platforms.Count == 0)
                     {
-                        Console.WriteLine("App has no platforms. ");
+                        logger.LogDebug("App has no platforms. ");
                         return (false, returnList);
                     }
 
@@ -390,37 +381,37 @@ namespace GameMarketAPIServer.Services
 
 
                     //Each valid app will insert into these tables.
-                    await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppDetails, detailsData, CRUD.Create);
+                    await dbManager.EnqueQueueAsync(schema.AppDetails, detailsData, CRUD.Create);
 
 
                     //Insert into dev and publ
                     if (detailsData.developers.Count > 0)
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppDevelopers, detailsData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppDevelopers, detailsData, CRUD.Create);
                     if (detailsData.publishers.Count > 0)
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppPublishers, detailsData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppPublishers, detailsData, CRUD.Create);
 
                     //Not all apps will insert into these.
                     if (detailsData.packages.Count() > 0)
                     {
-                        await dbManager.EnqueueSteamQueueAsync([Tables.SteamPackageIDs, Tables.SteamPackages], detailsData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync([schema.PackageIDs, schema.Packages], detailsData, CRUD.Create);
                     }
 
                     if (detailsData.platforms.Count() > 0)
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppPlatforms, detailsData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppPlatforms, detailsData, CRUD.Create);
 
                     if (detailsData.genres.Count() > 0)
-                        await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppGenres, detailsData, CRUD.Create);
+                        await dbManager.EnqueQueueAsync(schema.AppGenres, detailsData, CRUD.Create);
 
                     returnList.Add(detailsData);
                 }
 
                 return (true, returnList);
             }
-            catch (Exception ex) { Console.WriteLine(ex.ToString()); return (false, new List<TableData>()); }
+            catch (Exception ex) { logger.LogDebug(ex.ToString()); return (false, new List<ITableData>()); }
         }
 
 
-        public async Task<bool> ScanAllAppDetailsAsync(int maxCalls = 500)
+        public async Task<bool> ScanAllAppDetailsAsyncOld(int maxCalls = 500)
         {
             try
             {
@@ -431,10 +422,10 @@ namespace GameMarketAPIServer.Services
                 await connection.OpenAsync();
 
 
-                Tables table = Tables.SteamAppIDs;
+                var table = Database_structure.Steam.AppIDs;
                 if (await dbManager.validTableAsync(table))
                 {
-                    string sql = $@"Select appID from {DataBaseManager.Schemas.steam}.{table.To_String()} 
+                    string sql = $@"Select appID from {table.fullPath()} 
                      where lastScanned < @refreshTime or lastScanned IS null 
                      order by lastScanned, appId";
                     var appIDs = new List<UInt32>();
@@ -467,7 +458,7 @@ namespace GameMarketAPIServer.Services
                         //loopDurationTimer.Start();
                         if (++currentCalls > maxCalls)
                         {
-                            Console.WriteLine("Reached mas call paramater");
+                            logger.LogDebug("Reached mas call paramater");
                             break;
                         }
                         //if (maxCallTimer.Elapsed.Minutes > stmSettings.apiRequestTimer.Minutes)
@@ -483,10 +474,10 @@ namespace GameMarketAPIServer.Services
                                 //check if paramater has 
                                 if (++curentCallLimit > stmSettings.maxRequestIn5Minutes)
                                 {
-                                    await dbManager.processSteamQueueAsync();
-                                    // Console.WriteLine("Time to wait: " + (stmSettings.apiRequestTimer - maxCallTimer.Elapsed));
-                                    Console.WriteLine("Can Call Again at: " + (DateTime.UtcNow + stmSettings.apiRequestTimer - maxCallTimer.Elapsed));
-                                    Console.WriteLine("Current Loop: " + ++currentLoop);
+                                    await dbManager.processQueue(schema);
+                                    // logger.LogDebug("Time to wait: " + (stmSettings.apiRequestTimer - maxCallTimer.Elapsed));
+                                    logger.LogDebug("Can Call Again at: " + (DateTime.UtcNow + stmSettings.apiRequestTimer - maxCallTimer.Elapsed));
+                                    logger.LogDebug("Current Loop: " + ++currentLoop);
                                     await Task.Delay(stmSettings.apiRequestTimer - maxCallTimer.Elapsed);
 
                                     maxCallTimer.Restart();
@@ -496,10 +487,10 @@ namespace GameMarketAPIServer.Services
 
                                 string appDetails = await CallAPIAsync((int)APICalls.getAppDetails, appId.ToString());
                                 if (appDetails != httpRequestFail)
-                                    await ParseJsonAsync((int)APICalls.getAppDetails, appDetails);
+                                    await ParseJsonAsyncOld((int)APICalls.getAppDetails, appDetails);
                                 else continue;
 
-                                await dbManager.EnqueueSteamQueueAsync(Tables.SteamAppIDs, new SteamUpdateScannedData { ID = appId }, CRUD.Update); ;
+                                await dbManager.EnqueQueueAsync(schema.AppIDs, new SteamUpdateScannedData { ID = appId }, CRUD.Update); ;
 
                                 //This loop runs at max once every 1.5 sec
 #if false
@@ -510,10 +501,10 @@ namespace GameMarketAPIServer.Services
                             }
                             else
                             {
-                                Console.WriteLine("Cannot request for appdetails");
+                                logger.LogDebug("Cannot request for appdetails");
                             }
                         }
-                        catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+                        catch (Exception ex) { logger.LogDebug(ex.ToString()); }
                     }
                 }
                 else return false;
@@ -522,9 +513,316 @@ namespace GameMarketAPIServer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString()); return false;
+                logger.LogDebug(ex.ToString()); return false;
             }
         }
+
+        #endregion
+
+#endif
+
+
+        #region New Stuff
+
+        public async override Task<(bool, ICollection<ITable>?)> ParseJsonAsync(int apiCall, string json)
+        {
+            switch ((APICalls)apiCall)
+            {
+                case APICalls.getAppDetails:
+                    return await ParseAppDetails(json);
+                case APICalls.getAppListv2:
+                case APICalls.getAppListv1:
+                    return await ParseAppListAsync(json);
+                default:
+                    return (false, null);
+            }
+        }
+
+        private async Task<(bool, ICollection<ITable>?)> ParseAppListAsync(string json)
+        {
+
+            try
+            {
+                //SteamAppListMain can store data for v1 or v2 of the call.
+                SteamAppListMain? appListMain = JsonConvert.DeserializeObject<SteamAppListMain>(json);
+                ICollection<ITable> returnList = new HashSet<ITable>();
+                ICollection<SteamApp> appList = new List<SteamApp>();
+
+                if (appListMain == null) return (false, returnList);
+
+                //this is used for v1 of the call.
+                if (appListMain.response != null)
+                {
+                    logger.LogDebug("Null apps: " + appListMain.response.apps.Count(item => item == null));
+
+                    appList = appListMain.response.apps;
+#if true
+                    if (appListMain.response.have_more_results)
+                    {
+                        var paramaters = new Dictionary<string, object>
+                        {
+                            {"include_games", true },
+                            {"include_dlc", true },
+                           // {"include_software", false },
+                            //{"include_videos", false },
+                           // {"include_hardware", false },
+                            {"last_appid", appListMain.response.last_appid},
+                            {"max_results",  50000}
+                        };
+                        logger.LogDebug("\n\nNested Search for app list. \n\n");
+                        string response = await CallAPIAsync((int)APICalls.getAppListv1, JsonConvert.SerializeObject(paramaters));
+                        var (success, newAppList) = await ParseJsonAsync((int)APICalls.getAppListv1, response);
+                        if (success && newAppList != null && newAppList.Any())
+                        {
+                            returnList = newAppList;
+                        }
+                    }
+                    else
+                    {
+                        logger.LogDebug("No more results to add");
+                    }
+#endif
+                }
+
+
+
+
+                //this is used for v2 of the call
+                else if (appListMain.appList != null)
+                {
+                    logger.LogDebug("Total apps: " + appListMain.appList.apps.Count());
+                    logger.LogDebug("Null apps: " + appListMain.appList.apps.Count(item => item == null));
+                    appList = appListMain.appList.apps;
+                }
+
+                int nullcount = 0;
+                foreach (var app in appList)
+                {
+                    if (app == null) continue;
+                    if (app.appID == 292030)
+                    {
+                        logger.LogDebug("fad");
+                    }
+                    if (app.name == null || app.name == string.Empty || app.name == "")
+                    {
+                        ++nullcount;
+                        continue;
+                    }
+
+
+                    var appID = mapper.Map<DataBaseSchemas.SteamSchema.AppIDsTable>(app);
+                    returnList.Add(appID);
+                }
+                //returnList.OrderBy(e => ((DataBaseSchemas.SteamSchema.AppIDsTable)e).appID);
+                return (true, returnList);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                return (false, null);
+            }
+        }
+
+
+        private async Task<(bool, ICollection<ITable>?)> ParseAppDetails(string json)
+        {
+            try
+            {
+                var appDetailsList = JsonConvert.DeserializeObject<Dictionary<string, SteamAppDetails>>(json);
+                ICollection<ITable> returnList = new List<ITable>();
+                if (appDetailsList == null) return (false, null);
+
+                //There should only be one app in the list
+                foreach (var item in appDetailsList)
+                {
+                    SteamAppDetails appDetails = item.Value;
+                    if (appDetails == null) return (false, returnList);
+                    if (appDetails.success == false)
+                    {
+                        logger.LogDebug("API failed");
+                        return (false, null);
+                    }
+
+                    //Only care about games and dlc for this
+                    if (!validAppTypes.Contains(appDetails.data.type)) return (false, null);
+                    if (appDetails.data.steam_appid == 0) return (false, null);
+                    if (appDetails.data.name == null || appDetails.data.name == string.Empty) return (false, null);
+
+                    //Im pretty sure each app needs a dev or a pub
+                    if (appDetails.data.developers == null && appDetails.data.developers == null) return (false, null);
+
+                    //If the game isnt out yet, cant doo much with it.
+                    //plan on adding a check for it later
+                    if (appDetails.data.release_date == null) return (false, null);
+                    if (appDetails.data.release_date.coming_soon == true)
+                    {
+                        logger.LogDebug("Game isnt out yet. ");
+                        continue;
+                    }
+                    //only free games should not have a price listed. otherwise, its probably some test/early app.
+                    if (!appDetails.data.is_free && appDetails.data.price_overview == null)
+                    {
+                        logger.LogDebug("App not free, cant find price. ");
+                        continue;
+                    }
+
+
+                    var detailsData = MappingProfile.MapSteamAppDetails(appDetails.data);
+
+
+                    returnList.Add(detailsData);
+                }
+
+                return (true, returnList);
+            }
+            catch (Exception ex) { logger.LogDebug(ex.ToString()); return (false, null); }
+        }
+
+
+        public async Task<bool> ScanAllAppDetailsAsync(int maxCalls = 500)
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var refreshTime = DateTime.UtcNow - stmSettings.allAppUpdateFrequency;
+
+                using var scope = scopeFactory.CreateScope();
+                {
+                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+
+                    var appIDs = await dbService.SelectAppIDs(refreshTime);
+                    if (appIDs == null || !appIDs.Any()) return false;
+
+
+                    int currentCalls = 0;
+                    //For steam web api, you can call it at max 200 times every 5 minutes, or once every 1.5 sec;
+                    ICollection<SteamSchema.AppDetailsTable> successList = new List<SteamSchema.AppDetailsTable>();
+                    ICollection<SteamSchema.AppIDsTable> badList = new List<SteamSchema.AppIDsTable>();
+                    foreach (var appId in appIDs)
+                    {
+                        //loopDurationTimer.Start();
+                        if (++currentCalls > maxCalls)
+                        {
+                            logger.LogDebug("Reached mas call paramater");
+                            break;
+                        }
+                        try
+                        {
+                            if (!apiTracker.canRequest())
+                            {
+                                await dbService.AddUpdateTables(successList);
+                                successList.Clear();
+                                await apiTracker.waitForReset();
+                            }
+
+                            var appDetails = await ScannAppDetailsAsync(appId.appID);
+                            appId.lastScanned = now;
+                            if (appDetails != null && appDetails.Any())
+                            {
+                                var details = appDetails.Cast<SteamSchema.AppDetailsTable>().ToList();
+                                foreach (var detail in details)
+                                {
+                                    successList.Add(detail);
+                                }
+                            }
+                            else
+                            {
+                                badList.Add(appId);
+                            }
+
+                        }
+                        catch (Exception ex) { logger.LogDebug(ex.ToString()); }
+                    }
+                    await dbService.AddUpdateTables(successList);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex.ToString()); return false;
+            }
+        }
+
+        public async Task<ICollection<ITable>?> ScannAppDetailsAsync(UInt32 appID)
+        {
+            try
+            {
+                if (apiTracker.canRequest())
+                {
+                    apiTracker.makeRequest();
+
+                    string appDetails = await CallAPIAsync((int)APICalls.getAppDetails, appID.ToString());
+                    if (appDetails != httpRequestFail)
+                    {
+                        var (success, retunList) = await ParseJsonAsync((int)APICalls.getAppDetails, appDetails);
+                        if (success && retunList != null && retunList.Any())
+                            return retunList;
+                    }
+
+                }
+                else
+                {
+                    logger.LogDebug("Cannot request for appdetails");
+                }
+                return null;
+            }
+            catch (Exception ex) { logger.LogDebug(ex.ToString()); return null; }
+        }
+
+        public async Task GetAppList(bool useV2 = true)
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var refreshTime = DateTime.UtcNow - stmSettings.allAppUpdateFrequency;
+
+                using var scope = scopeFactory.CreateScope();
+                {
+                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+
+                    string response;
+                    if (!useV2)
+                    {
+                        var paramaters = new Dictionary<string, object>
+                        {
+                            {"include_games", true },
+                            {"include_dlc", true },
+                           // {"include_software", false },
+                            //{"include_videos", false },
+                           // {"include_hardware", false },
+                            {"max_results",  50000}
+                        };
+                        response = await CallAPIAsync((int)APICalls.getAppListv1, JsonConvert.SerializeObject(paramaters));
+                        var (success, data) = await ParseJsonAsync((int)APICalls.getAppListv1, response);
+                        if (success && data != null && data.Any())
+                        {
+                            var appIds = data.Cast<SteamSchema.AppIDsTable>().ToList();
+                            await dbService.AddUpdateTables(appIds);
+                        }
+                    }
+                    else
+                    {
+                        response = await CallAPIAsync((int)APICalls.getAppListv2);
+                        var (success, data) = await ParseJsonAsync((int)APICalls.getAppListv2, response);
+                        if (success && data != null && data.Any())
+                        {
+                            var appIds = data.Cast<SteamSchema.AppIDsTable>().ToList();
+                            await dbService.AddUpdateTables(appIds);
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+            }
+        }
+        #endregion
+
+
+
 
         public override string ToStringAsync(int apiCall)
         {

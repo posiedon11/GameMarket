@@ -526,7 +526,9 @@ namespace GameMarketAPIServer.Models
     public class SteamAppListMain : JsonData
     {
         public SteamAppListMain(ILogger logger) : base(logger) { }
+        //v2
         public SteamAppList appList { get; set; }
+        //v1
         public SteamAppList response { get; set; }
 
 
@@ -563,13 +565,13 @@ namespace GameMarketAPIServer.Models
     public class SteamApp : JsonData
     {
         public SteamApp(ILogger logger) : base(logger) { }
-        public UInt32 appid { get; set; }
+        public UInt32 appID { get; set; }
         public string name { get; set; }
 
         public override void output(int outputNestedDepth = 0)
         {
             logger.LogDebug($"\nProduct: ");
-            logger.LogDebug($"App ID:  {appid}");
+            logger.LogDebug($"App ID:  {appID}");
             logger.LogDebug($"Name:  {name}");
             if (outputNestedDepth > 0)
             {
@@ -593,18 +595,18 @@ namespace GameMarketAPIServer.Models
         public UInt32 steam_appid { get; set; }
         public bool is_free { get; set; }
 
-        public List<UInt32> dlc { get; set; }
+        public HashSet<UInt32> dlc { get; set; }
         public string short_description { get; set; }
 
         public SteamFullGame fullgame { get; set; }
 
-        public List<string> developers { get; set; }
-        public List<string> publishers { get; set; }
+        public HashSet<string> developers { get; set; }
+        public HashSet<string> publishers { get; set; }
 
         public SteamPriceOverview price_overview { get; set; }
-        public List<UInt32> packages { get; set; }
+        public HashSet<UInt32> packages { get; set; }
 
-        public List<SteamGenre> genres { get; set; }
+        public HashSet<SteamGenre> genres { get; set; }
         public SteamPlatforms platforms { get; set; }
 
         public SteamRelease release_date { get; set; }
@@ -645,4 +647,26 @@ namespace GameMarketAPIServer.Models
 
     }
     #endregion
+
+    public class GameMarketTitledata
+    {
+        Int32 gameID { get; set; }
+        string gameTitle { get; set; }
+
+        SortedSet<string> developers { get; set; }
+        SortedSet<string> publishers { get; set; }
+
+    }
+    public class GameMarketPlatformIDsData : JsonData
+    {
+
+        public SortedSet<string> xboxIds { get; set; }
+        public SortedSet<string> steamIds { get; set; }
+        public GameMarketPlatformIDsData(ILogger logger) : base(logger) { }
+        public override void output(int outputNestedDepth = 0)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

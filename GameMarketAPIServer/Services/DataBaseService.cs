@@ -1,0 +1,430 @@
+﻿using GameMarketAPIServer.Configuration;
+using GameMarketAPIServer.Models;
+using GameMarketAPIServer.Models.Contexts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore.Metadata;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
+using System.Reflection;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using SteamKit2.GC.Dota.Internal;
+using Z.BulkOperations;
+
+namespace GameMarketAPIServer.Services
+{
+    public class DataBaseService
+    {
+        private readonly DatabaseContext context;
+        private ILogger<DataBaseService> logger;
+        public readonly IMapper mapper;
+        protected MainSettings mainSettings;
+        public DataBaseService(ILogger<DataBaseService> logger, IOptions<MainSettings> settings, IMapper mapper, DatabaseContext context)
+        {
+            this.context = context;
+            this.logger = logger;
+            this.mainSettings = settings.Value;
+            this.mapper = mapper;
+
+
+
+        }
+        //if i feel like cheating
+        public DatabaseContext getContext() => context;
+        public async Task AddUpdateTables<TableType>(ICollection<TableType> tables) where TableType : class, Models.ITable
+        {
+            try
+            {
+                if (tables != null && tables.All(d => d is TableType) && tables.Any())
+                {
+                    var castedTables = tables.Cast<TableType>().ToList();
+                    if (castedTables is ICollection<XboxSchema.GameTitleTable> xboxTitles)
+                    {
+                        await context.BulkMergeAsync(xboxTitles, options => options.IncludeGraph = false);
+
+                        var titleDevices = xboxTitles.SelectMany(xt => xt.TitleDevices ?? Enumerable.Empty<XboxSchema.TitleDeviceTable>()).Where(td => td != null).ToHashSet();
+
+                        await context.BulkSynchronizeAsync(titleDevices, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.modernTitleID,
+                                x.device
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.modernTitleID;
+                        });
+                    }
+
+                    else if (castedTables is ICollection<XboxSchema.TitleDetailTable> titleDetails)
+                    {
+                        var allProductIDs = context.xboxProductIDs.ToDictionary(e => e.productID, e => e);
+                        var gameBundles = titleDetails.SelectMany(td => td.GameBundles ?? Enumerable.Empty<XboxSchema.GameBundleTable>()).Where(gb => gb != null).ToHashSet();
+
+
+                        var productIDstring = titleDetails.Select(e => e.productID).ToHashSet();
+                        var bundleIDs = gameBundles.Select(gb => gb.relatedProductID).ToHashSet();
+                        productIDstring.UnionWith(bundleIDs);
+
+                        var mergeIDs = productIDstring.Select(pd => allProductIDs.ContainsKey(pd) ? allProductIDs[pd] : new XboxSchema.ProductIDTable(pd)).ToHashSet();
+                        await context.BulkMergeAsync(mergeIDs, options => options.IncludeGraph = false);
+
+                        await context.BulkSynchronizeAsync(titleDetails, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => x.productID;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.modernTitleID;
+                        });
+                        var detailsList = titleDetails.Select(x => x.productID).ToHashSet();
+                        await context.BulkSynchronizeAsync(gameBundles, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => x.relatedProductID;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.productID;
+                        });
+                    }
+
+                    else if (castedTables is ICollection<XboxSchema.MarketDetailTable> marketDetails)
+                    {
+                        var productPlatforms = marketDetails.SelectMany(md => md.ProductPlatforms ?? Enumerable.Empty<XboxSchema.ProductPlatformTable>()).Where(pp => pp != null).ToHashSet();
+                        //context.AddRange(marketDetails);
+
+                        //context.BulkMerge(marketDetails);
+                        await context.BulkMergeAsync(marketDetails, options => options.IncludeGraph = false);
+                        await context.BulkSynchronizeAsync(productPlatforms, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.productID,
+                                x.platform
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.productID;
+                        });
+                    }
+
+                    else if (castedTables is ICollection<SteamSchema.AppIDsTable> appIDs)
+                    {
+                        int batchSize = 20000;
+                        int total = appIDs.Count;
+                        int processed = 0;
+                        await context.BulkMergeAsync(appIDs, options => {
+                            options.IncludeGraph = false;
+                            options.AllowDuplicateKeys = false;
+                            options.BatchTimeout = 300;
+                            options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
+                        });
+                        //while (processed < total)
+                        //{
+                        //    var batch = appIDs.Skip(processed).Take(batchSize).ToList();
+                        //    await context.BulkMergeAsync(batch, options => { 
+                        //        options.IncludeGraph = false;
+                        //        options.AllowDuplicateKeys = false;
+                        //        options.BatchTimeout = 300;
+                        //        options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
+                        //    });
+                        //    processed += batchSize;
+                        //}
+                        //    await context.BulkMergeAsync(appIDs, options =>
+                        //    {
+                        //        options.IncludeGraph = false;
+                        //        options.BatchTimeout = 300;
+                        //        options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
+                        //});
+                    }
+
+                    else if (castedTables is ICollection<SteamSchema.AppDetailsTable> appDetails)
+                    {
+                        var allDevs = appDetails.SelectMany(ad => ad.Developers ?? Enumerable.Empty<SteamSchema.AppDevelopersTable>()).Where(g => g != null).ToHashSet();
+                        var allPubs = appDetails.SelectMany(ad => ad.Publishers ?? Enumerable.Empty<SteamSchema.AppPublishersTable>()).Where(g => g != null).ToHashSet();
+                        var allDLC = appDetails.SelectMany(ad => ad.DLCs ?? Enumerable.Empty<SteamSchema.AppDLCTable>()).Where(g => g != null).ToHashSet();
+                        var allPlat = appDetails.SelectMany(ad => ad.Platforms ?? Enumerable.Empty<SteamSchema.AppPlatformsTable>()).Where(g => g != null).ToHashSet();
+                        var allPackeges = appDetails.SelectMany(ad => ad.Packeges ?? Enumerable.Empty<SteamSchema.PackagesTable>()).Where(g => g != null).ToHashSet();
+
+                        var allPackageIDstring = allPackeges.Select(ad => ad.packageID).Where(g => g != null).ToHashSet();
+
+                        var allPackageIDs = allPackageIDstring.Select(ad => new SteamSchema.PackageIDsTable(ad)).ToHashSet();
+
+
+                        await context.BulkMergeAsync(appDetails, options => options.IncludeGraph = false);
+
+                        await context.BulkSynchronizeAsync(allDevs, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.appID,
+                                x.developer
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
+                        });
+                        await context.BulkSynchronizeAsync(allPubs, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.appID,
+                                x.publisher
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
+                        });
+                        await context.BulkSynchronizeAsync(allDLC, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.appID,
+                                x.dlcID
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
+                        });
+                        await context.BulkSynchronizeAsync(allPlat, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.appID,
+                                x.platform
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
+                        });
+
+                        await context.BulkMergeAsync(allPackageIDs, options => options.IncludeGraph = false);
+
+                        await context.BulkSynchronizeAsync(allPackeges, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.appID,
+                                x.packageID
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
+                        });
+                    }
+
+                    else if (castedTables is ICollection<GameMarketSchema.GameTitleTable> marketTitles)
+                    {
+                        await context.BulkMergeAsync(marketTitles, options => {
+                            options.IncludeGraph = false;
+                        });
+                        var allDevs = marketTitles.SelectMany(mt => mt.Developers ?? Enumerable.Empty<GameMarketSchema.DeveloperTable>()).Where(g => g != null).ToHashSet();
+                        var allPubs = marketTitles.SelectMany(mt => mt.Publishers ?? Enumerable.Empty<GameMarketSchema.PublisherTable>()).Where(g => g != null).ToHashSet();
+                        var xboxLinks = marketTitles.SelectMany(mt => mt.XboxLinks ?? Enumerable.Empty<GameMarketSchema.XboxLinkTable>()).Where(g => g != null).ToHashSet();
+                        var steamLinks = marketTitles.SelectMany(mt => mt.SteamLinks ?? Enumerable.Empty<GameMarketSchema.SteamLinkTable>()).Where(g => g != null).ToHashSet();
+
+
+
+                        await context.BulkSynchronizeAsync(allDevs, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                        await context.BulkSynchronizeAsync(allPubs, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                        await context.BulkSynchronizeAsync(xboxLinks, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                        await context.BulkSynchronizeAsync(steamLinks, options => {
+                            options.IncludeGraph = false;
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                    }
+                    else
+                    {
+                        logger.LogDebug("Default Merge");
+                        await context.BulkMergeAsync(castedTables, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.BatchTimeout = 90;
+                        }
+                             );
+                    }
+                    await context.BulkSaveChangesAsync(options => options.IncludeGraph = false);
+                }
+                else
+                {
+                    logger.LogWarning("Error, count not type cast");
+                    await context.BulkSaveChangesAsync();
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return;
+            }
+        }
+        public async Task AddUpdateTable(Models.ITable table)
+        {
+            try
+            {
+                if (table is DataBaseSchemas.XboxSchema.UserProfileTable userTable)
+                {
+                    context.Add(userTable);
+                    //context.Add(userTable);
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+            }
+
+        }
+        public async Task AddTable(Models.ITable table)
+        {
+            try
+            {
+                context.Add(table);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+            }
+
+        }
+        public async Task UpdateTable(Models.ITable table)
+        {
+            try
+            {
+                context.Update(table);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+            }
+
+        }
+
+        public async Task<TableType?> Select<TableType>(object? id = null) where TableType : class, Models.ITable
+        {
+            try
+            {
+                if (id != null)
+                {
+                    if (id is UInt32 intID)
+                    {
+                        return await context.Set<TableType>().FindAsync(intID);
+                    }
+                    else if (id is string stringID)
+                    {
+                        return await context.Set<TableType>().FindAsync(stringID);
+                    }
+                    else
+                    {
+                        logger.LogError("ID type not implemented");
+                        return null;
+                    }
+                }
+                else
+                {
+                    return await context.Set<TableType>().FirstOrDefaultAsync();
+                }
+
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+
+        public async Task<ICollection<TableType>?> SelectAll<TableType>() where TableType : class, Models.ITable
+        {
+            try
+            {
+                return await context.Set<TableType>().ToListAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+
+        public async Task<ICollection<XboxSchema.UserProfileTable>?> SelectXboxUsers(DateTime? refreshTime = null)
+        {
+            try
+            {
+                //var query = context.Set<>
+                //var users = await context.xboxUsers.ToListAsync();
+                //var test = await context.Set<XboxSchema.UserProfileTable>().ToListAsync();
+                var users = await context.xboxUsers.Where(user => user.lastScanned == null || user.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls => ls.lastScanned).ToListAsync();
+                return users;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+
+        public async Task<ICollection<XboxSchema.GameTitleTable>?> SelectXboxTitles(DateTime? refreshTime = null)
+        {
+            try
+            {
+                var titles = await context.xboxTitles.Where(title => title.lastScanned == null || title.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls => ls.lastScanned).ToListAsync();
+                return titles;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+
+        public async Task<ICollection<XboxSchema.ProductIDTable>?> SelectProductIDs(DateTime? refreshTime = null)
+        {
+            try
+            {
+                var details = await context.xboxProductIDs.Where(detail => detail.lastScanned == null || detail.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls => ls.lastScanned).ThenBy(ls => ls.productID).ToListAsync();
+                return details;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+
+        public async Task<ICollection<SteamSchema.AppIDsTable>?> SelectAppIDs(DateTime? refreshTime = null)
+        {
+            try
+            {
+                var appIDs = await context.steamAppIDs.Where(appID => appID.lastScanned == null || appID.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls => ls.lastScanned).ToListAsync();
+                return appIDs;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+                return null;
+            }
+        }
+        public async Task InsertDefaultXboxUsers()
+        {
+            try
+            {
+                var users = new List<XboxSchema.UserProfileTable>()
+                {
+                    new XboxSchema.UserProfileTable("2533274792073233", "jimmyhova"),
+                    new XboxSchema.UserProfileTable("2533274797744336", "SiegfriedX"),
+                    new XboxSchema.UserProfileTable("2533274810558996", "True Marvellous"),
+                    new XboxSchema.UserProfileTable("2533274814515397", "RedmptionDenied"),
+                    new XboxSchema.UserProfileTable("2533274880644024", "posiedon11"),
+                    new XboxSchema.UserProfileTable("2698138705331816", "Riffai"),
+                };
+                await context.BulkMergeAsync(users);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.ToString());
+            }
+        }
+    }
+
+    //public async Task<IEnumerable<T>> GetAllFromTable<T>(T table) where T : ITable
+    //{
+
+    //}
+}
+

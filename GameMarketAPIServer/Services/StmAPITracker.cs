@@ -1,25 +1,60 @@
 ﻿using GameMarketAPIServer.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace GameMarketAPIServer.Services
 {
     public class StmAPITracker
     {
         private readonly SteamSettings stmSettings;
-        public int steamCurrentCalls { get; set; } = 0;
+        public int steamDailyCurrentCalls { get; set; } = 0;
+        public int current5MinCalls { get; set; } = 0;
 
-        public StmAPITracker(IOptions<MainSettings> settings)
+        private readonly Stopwatch rateLimitStopwatch = new Stopwatch();
+        private readonly ILogger logger;
+
+        public StmAPITracker(IOptions<MainSettings> settings, ILogger<StmAPITracker> logger)
         {
             stmSettings = settings.Value.steamSettings;
+            this.logger = logger;
         }
         public bool canRequest()
         {
-            if (steamCurrentCalls < stmSettings.steamAPIDailyCallLimit) { return true; }
-            else return false;
+            if (steamDailyCurrentCalls < stmSettings.steamAPIDailyCallLimit)
+            {
+                if (current5MinCalls >= stmSettings.maxRequestIn5Minutes)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+                return false;
         }
         public void makeRequest()
         {
-            ++steamCurrentCalls;
+            ++steamDailyCurrentCalls;
+            ++current5MinCalls;
+            if (!rateLimitStopwatch.IsRunning)
+            {
+                rateLimitStopwatch.Start();
+            }
+        }
+        public async Task waitForReset(ILogger? _logger = null)
+        {
+            var waitTime = stmSettings.apiRequestTimer - rateLimitStopwatch.Elapsed;
+            if (_logger != null)
+                _logger.LogDebug("Can Call Again at: " + (DateTime.UtcNow + waitTime));
+            else
+                logger.LogDebug("Can Call Again at: " + (DateTime.UtcNow + waitTime));
+            await Task.Delay(waitTime);
+
+            rateLimitStopwatch.Restart();
+            current5MinCalls = 0;
         }
     }
 }

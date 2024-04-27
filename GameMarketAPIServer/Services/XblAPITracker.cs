@@ -1,12 +1,14 @@
 ﻿using GameMarketAPIServer.Configuration;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace GameMarketAPIServer.Services
 {
     public class XblAPITracker
     {
         private readonly XboxSettings xbSettings;
-
+        private readonly ILogger logger;
+        private readonly Stopwatch stopwatch = new Stopwatch();
 
         public enum hourlyAPICallsRemaining
         {
@@ -15,7 +17,7 @@ namespace GameMarketAPIServer.Services
             profile,
             extra
         };
-
+        private object trackerLock = new object();
         public int maxHourlyAPIRequests { get; private set; } = 150;
         public int remainingAPIRequests { get; private set; } = 150;
 
@@ -25,9 +27,10 @@ namespace GameMarketAPIServer.Services
         private int hourlyProfileRemaining = 0;
         private int hourlyExtraRemaining = 0;
 
-        public XblAPITracker(IOptions<MainSettings> settings)
+        public XblAPITracker(IOptions<MainSettings> settings, ILogger<XblAPITracker> logger)
         {
             xbSettings = settings.Value.xboxSettings;
+            this.logger = logger;
         }
 
         public int remaingRequests(hourlyAPICallsRemaining hourlyCalls)
@@ -48,6 +51,26 @@ namespace GameMarketAPIServer.Services
 
                 default:
                     return 0;
+            }
+        }
+        public bool needCheckHeaders()
+        {
+            if (!stopwatch.IsRunning)
+            {
+                stopwatch.Start();
+                return true;
+            }
+            else
+            {
+                if (stopwatch.Elapsed.Minutes >= 60)
+                {
+                    stopwatch.Restart();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
         public bool canRequest(hourlyAPICallsRemaining hourlyCalls)
@@ -92,76 +115,88 @@ namespace GameMarketAPIServer.Services
             else if (xbSettings.autoUseExtraCalls && hourlyExtraRemaining > 0)
             {
                 if (xbSettings.outputSettings.outputDebug)
-                    Console.WriteLine("Using Extra");
+                    logger.LogDebug("Using Extra");
                 return true;
             }
             return false;
         }
         public void makeRequest(hourlyAPICallsRemaining hourlyCalls)
         {
-            --remainingAPIRequests;
-            switch (hourlyCalls)
+            lock (trackerLock)
             {
-                case hourlyAPICallsRemaining.title:
-                    if (hourlyTitleRemaining-- <= 0)
-                    {
-                        if (xbSettings.outputSettings.outputDebug)
-                            Console.WriteLine("Taking from extra");
-                        --hourlyExtraRemaining;
-                    }
+                --remainingAPIRequests;
+                switch (hourlyCalls)
+                {
+                    case hourlyAPICallsRemaining.title:
+                        if (hourlyTitleRemaining-- <= 0)
+                        {
+                            if (xbSettings.outputSettings.outputDebug)
+                                logger.LogTrace("Taking from extra");
+                            --hourlyExtraRemaining;
+                        }
 
-                    break;
-                case hourlyAPICallsRemaining.market:
-                    if (hourlyMarketRemaining-- <= 0)
-                    {
-                        --hourlyExtraRemaining;
-                    }
-                    break;
-                case hourlyAPICallsRemaining.profile:
-                    if (hourlyProfileRemaining-- <= 0)
-                    {
-                        --hourlyExtraRemaining;
-                    }
-                    break;
-                case hourlyAPICallsRemaining.extra:
-                    hourlyExtraRemaining--;
-                    break;
-                default:
-                    break;
+                        break;
+                    case hourlyAPICallsRemaining.market:
+                        if (hourlyMarketRemaining-- <= 0)
+                        {
+                            --hourlyExtraRemaining;
+                        }
+                        break;
+                    case hourlyAPICallsRemaining.profile:
+                        if (hourlyProfileRemaining-- <= 0)
+                        {
+                            --hourlyExtraRemaining;
+                        }
+                        break;
+                    case hourlyAPICallsRemaining.extra:
+                        hourlyExtraRemaining--;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         public void resetHourlyRequest()
         {
-            remainingAPIRequests = maxHourlyAPIRequests;
-            hourlyMarketRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyMarketRequestPercent);
-            hourlyProfileRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyProfileRequestPercent);
-            hourlyTitleRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyTitleRequestPercent);
-            hourlyExtraRemaining = maxHourlyAPIRequests - hourlyMarketRemaining - hourlyProfileRemaining - hourlyTitleRemaining;
+            lock (trackerLock)
+            {
+                remainingAPIRequests = maxHourlyAPIRequests;
+                hourlyMarketRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyMarketRequestPercent);
+                hourlyProfileRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyProfileRequestPercent);
+                hourlyTitleRemaining = (int)Math.Round(maxHourlyAPIRequests * xbSettings.hourlyTitleRequestPercent);
+                hourlyExtraRemaining = maxHourlyAPIRequests - hourlyMarketRemaining - hourlyProfileRemaining - hourlyTitleRemaining;
+            }
         }
         public void repartitionHourlyRequests()
         {
-            hourlyMarketRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyMarketRequestPercent);
-            hourlyProfileRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyProfileRequestPercent);
-            hourlyTitleRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyTitleRequestPercent);
-            hourlyExtraRemaining = remainingAPIRequests - hourlyMarketRemaining - hourlyProfileRemaining - hourlyTitleRemaining;
+            lock (trackerLock)
+            {
+                hourlyMarketRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyMarketRequestPercent);
+                hourlyProfileRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyProfileRequestPercent);
+                hourlyTitleRemaining = (int)Math.Round(remainingAPIRequests * xbSettings.hourlyTitleRequestPercent);
+                hourlyExtraRemaining = remainingAPIRequests - hourlyMarketRemaining - hourlyProfileRemaining - hourlyTitleRemaining;
+            }
         }
         public void outputRemainingRequests()
         {
-            Console.WriteLine("Max Calls: " + maxHourlyAPIRequests);
-            Console.WriteLine("Remaing Calls: " + remainingAPIRequests);
-            Console.WriteLine("Profile calls Remaining: " + hourlyProfileRemaining + ".   Percentage of Max: " + xbSettings.hourlyProfileRequestPercent * 100 + "%");
-            Console.WriteLine("Market calls Remaining: " + hourlyMarketRemaining + ".   Percentage of Max: " + xbSettings.hourlyMarketRequestPercent * 100 + "%");
-            Console.WriteLine("Title calls Remaining: " + hourlyTitleRemaining + ".   Percentage of Max: " + xbSettings.hourlyTitleRequestPercent * 100 + "%");
-            Console.WriteLine("Extra calls Remaining: " + hourlyExtraRemaining + ".   Percentage of Max: " + Math.Round(1 - xbSettings.hourlyProfileRequestPercent - xbSettings.hourlyMarketRequestPercent - xbSettings.hourlyTitleRequestPercent) * 100 + "%");
-            Console.WriteLine("\n\n");
+            logger.LogInformation($@"Max Calls: {maxHourlyAPIRequests}" +
+            "Remaing Calls: {remainingAPIRequests}\n" +
+            "Profile calls Remaining:  {hourlyProfileRemaining}.   Percentage of Max:  {xbSettings.hourlyProfileRequestPercent * 100}%\n" +
+            "Market calls Remaining:  {hourlyMarketRemaining}.   Percentage of Max:  {xbSettings.hourlyMarketRequestPercent * 100}%\n" +
+            "Title calls Remaining:  {hourlyTitleRemaining}.   Percentage of Max:  {xbSettings.hourlyTitleRequestPercent * 100} %\n" +
+            "Extra calls Remaining:  {hourlyExtraRemaining}.   Percentage of Max:  {Math.Round(1 - xbSettings.hourlyProfileRequestPercent - xbSettings.hourlyMarketRequestPercent - xbSettings.hourlyTitleRequestPercent) * 100} %\n\n");
         }
         public void setRemaingCalls(int value)
         {
-            remainingAPIRequests = value;
+            lock (trackerLock)
+            {
+                remainingAPIRequests = value;
+            }
         }
         public void setMaxCAlls(int value)
         {
-            maxHourlyAPIRequests = value;
+            lock (trackerLock)
+                maxHourlyAPIRequests = value;
         }
     }
 }

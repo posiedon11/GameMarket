@@ -1,0 +1,143 @@
+﻿using GameMarketAPIServer.Configuration;
+using GameMarketAPIServer.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Moq;
+using Xunit.Abstractions;
+using Microsoft.Extensions.Logging;
+using GameMarketAPIServer.Models;
+using Xunit;
+using System.Reflection;
+using static GameMarketAPIServer.Models.Database_structure;
+using SteamKit2;
+using GameMarketAPIServer.Models.Contexts;
+using Microsoft.EntityFrameworkCore;
+
+namespace GameMarketAPIServer.Utilities.Testing
+{
+    public static class TestHelper
+    {
+        public static IOptions<MainSettings> CreateMockSettings()
+        {
+            var settings = new MainSettings
+            {
+
+            };
+            return Options.Create(settings);
+        }
+    }
+
+    public static class ConfigurationHelper
+    {
+        public static IConfigurationRoot GetConfiguration(string outputPath)
+        {
+            return new ConfigurationBuilder()
+                .SetBasePath(outputPath)
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddUserSecrets<Test>(optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+        }
+    }
+
+    public class TestFixture : IDisposable
+    {
+        public ServiceProvider serviceProvider { get; private set; }
+        public DatabaseContext context { get; private set; }
+
+        public TestFixture()
+        {
+            var services = new ServiceCollection();
+
+            services.AddLogging(builder => { builder.AddConsole();builder.AddDebug(); });
+            services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+
+            //configuration
+            IConfiguration configuration = ConfigurationHelper.GetConfiguration(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            services.Configure<MainSettings>(configuration.GetSection("MainSettings"));
+
+
+            services.AddHttpClient();
+
+            services.AddAutoMapper(typeof(MappingProfile));
+
+            services.AddScoped<DataBaseService>();
+
+            services.AddSingleton<StmAPITracker>();
+            services.AddSingleton<XblAPITracker>();
+
+            services.AddSingleton<XblAPIManager>();
+            services.AddSingleton<StmAPIManager>();
+            services.AddSingleton<GameMergerManager>();
+
+            //Services.AddDbContext<DatabaseContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            services.AddDbContext<DatabaseContext>(options =>
+            {
+                if (configuration.GetValue<bool>("UseInMemoryDatabase"))
+                    {
+                    options.UseInMemoryDatabase(databaseName: "TestDB");
+                }
+                else
+                {
+                    
+                }
+                
+            });
+            serviceProvider = services.BuildServiceProvider();
+            
+        }
+        public void Dispose()
+        {
+            if (serviceProvider is IDisposable)
+            {
+                serviceProvider.Dispose();
+            }
+        }
+    }
+
+    [CollectionDefinition("Test Collection")]
+    public class TestCollection : ICollectionFixture<TestFixture> { }
+    public abstract class Test
+    {
+        protected readonly ServiceProvider serviceProvider;
+        protected readonly ITestOutputHelper output;
+        protected readonly IOptions<MainSettings> settings;
+        protected readonly IHttpClientFactory httpClientFactory;
+        protected readonly IServiceScopeFactory scopeFactory;
+        protected readonly HttpClient httpClient;
+        protected readonly ILogger<Test> logger;
+
+        protected readonly Mock<IAPIManager> mockAPICaller;
+        protected readonly DataBaseService dataBaseService;
+
+        //protected readonly XblAPIManager xblAPIManager;
+        //protected readonly StmAPIManager stmAPIManager;
+
+        protected DatabaseContext context { get; private set; }
+        protected Test(ITestOutputHelper output, TestFixture fixture, string outputPath = "")
+        {
+            logger = new XUnitLoggerProvider(output).CreateLogger<Test>();
+            if (outputPath == "")
+                outputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            serviceProvider = fixture.serviceProvider;
+
+            this.httpClientFactory = fixture.serviceProvider.GetRequiredService<IHttpClientFactory>();
+            httpClient = httpClientFactory.CreateClient();
+
+
+            settings = fixture.serviceProvider.GetRequiredService<IOptions<MainSettings>>();
+            mockAPICaller = new Mock<IAPIManager>();
+
+
+            //var dbLogger = new XUnitLoggerProvider(output).CreateLogger<DataBaseManager>();
+            //this.dbManager = new DataBaseManager(settings, dbLogger);
+
+
+            var serviceLogger = new XUnitLoggerProvider(output).CreateLogger<DataBaseService>();
+            this.dataBaseService = fixture.serviceProvider.GetRequiredService<DataBaseService>();
+
+            this.scopeFactory = fixture.serviceProvider.GetRequiredService<IServiceScopeFactory>();
+        }
+    }
+}

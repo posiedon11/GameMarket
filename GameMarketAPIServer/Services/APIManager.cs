@@ -18,42 +18,44 @@ namespace GameMarketAPIServer.Services
         Task<string> CallAPIAsync(int apiCall, string paramaters = "");
     }
 
-    public abstract class APIManager : IAPIManager
+    public abstract class APIManager<TSchema> : IAPIManager where TSchema : ISchema
     {
+        protected readonly IHttpClientFactory clientFactory;
         protected readonly HttpClient httpClient;
-        protected readonly IDataBaseManager dbManager;
+        protected readonly TSchema schema;
         protected readonly MainSettings settings;
-        protected readonly ILogger<APIManager> apiLogger;
+        protected readonly ILogger<APIManager<TSchema>> logger;
 
         public const string errorURLNoParam = "Error, missing paramater";
         public const string errorURLCallDoesntExist = "Error, API call does not exist";
         public const string httpRequestFail = "requestFailed";
         public const string checkHeaders = "CheckForHeaders";
         public const string noPayload = "No PayloadGiven";
-        public string managerName;
 
 
         protected bool running = false;
         protected CancellationTokenSource mainCTS = new CancellationTokenSource();
         protected Task mainTask;
 
-        protected APIManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, string managerName, ILogger<APIManager> apiLogger)
+        protected APIManager( IOptions<MainSettings> settings, ILogger<APIManager<TSchema>> apiLogger,
+            TSchema schema, IHttpClientFactory httpClientFactory)
         {
             // this.settings = settings;
             this.settings = settings.Value;
-            this.dbManager = dbManager;
-            this.managerName = managerName;
-            httpClient = new HttpClient();
+            httpClient = httpClientFactory.CreateClient();
             CreateDefaultHeaders(settings);
-            this.apiLogger = apiLogger;
+            this.logger = apiLogger;
+
+            this.schema = schema;
         }
         public virtual void Start()
         {
             running = true;
-            Console.WriteLine(managerName + " is starting");
+
+            logger.LogTrace($"{schema.GetName()} is starting");
             mainTask = Task.Run(RunAsync);
         }
-        public virtual void Stop() 
+        public virtual void Stop()
         {
             running = false;
             mainTask?.Wait();
@@ -67,22 +69,22 @@ namespace GameMarketAPIServer.Services
 
         public bool ValidURL(string url)
         {
-            if (url == null) 
-            { 
-                return false; 
-            }
-            else if (url.Length == 0) 
-            { 
+            if (url == null)
+            {
                 return false;
             }
-            else if  (url == errorURLNoParam) 
-            { 
-                return false; 
-            }
-            else if (url == errorURLCallDoesntExist) 
+            else if (url.Length == 0)
             {
-                Console.WriteLine("Error");
-                return false; 
+                return false;
+            }
+            else if (url == errorURLNoParam)
+            {
+                return false;
+            }
+            else if (url == errorURLCallDoesntExist)
+            {
+                logger.LogDebug("Error");
+                return false;
             }
 
             return true;
@@ -106,17 +108,17 @@ namespace GameMarketAPIServer.Services
                 }
                 if (settings.outputHTTP)
                 {
-                    Console.WriteLine("\n" + url);
+                    logger.LogInformation("\n" + url);
                 }
 
 
                 HttpRequestMessage request;
                 string payload = PostPayload(apiCall, paramaters);
                 if (payload == noPayload)
-                     request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request = new HttpRequestMessage(HttpMethod.Get, url);
                 else
                 {
-                    if (settings.outputHTTP) { Console.WriteLine(payload + "\n"); }
+                    if (settings.outputHTTP) { logger.LogDebug(payload + "\n"); }
                     request = new HttpRequestMessage(HttpMethod.Post, url)
                     {
                         Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json")
@@ -133,19 +135,20 @@ namespace GameMarketAPIServer.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                logger.LogError(ex.ToString());
                 return httpRequestFail;
             }
 
         }
-        public abstract Task<(bool,List<TableData>)> ParseJsonAsync(int apiCall, string json);
+        //public abstract Task<(bool,List<ITableData>)> ParseJsonAsyncOld(int apiCall, string json);
+
+        public abstract Task<(bool, ICollection<ITable>?)> ParseJsonAsync(int apiCall, string json);
 
 
 
-        protected abstract void CreateDefaultHeaders(IOptions<MainSettings>settings);
+        protected abstract void CreateDefaultHeaders(IOptions<MainSettings> settings);
         protected abstract void AddAdditionalHeaders(HttpRequestMessage request, int apiCall, string paramaters, string payload);
         protected abstract void HandleHttpClientHeaders(HttpHeaders headers, int apiCall, string paramaters);
 
-        
     }
 }

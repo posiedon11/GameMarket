@@ -4,12 +4,18 @@ using System.Numerics;
 
 namespace GameMarketAPIServer.Models
 {
-    public interface  TableData
+    public interface ITableData
     {
         void outputData();
     };
+    public class AllTableData
+    {
+        public class Xbox
+        {
 
-    class genericXboxData : TableData
+        }
+    }
+    class genericXboxData : ITableData
     {
         public string itemType { get; set; }
         public string productID { get; set; }
@@ -21,7 +27,7 @@ namespace GameMarketAPIServer.Models
         }
 
     };
-    class XboxUpdateScannedData : TableData
+    class XboxUpdateScannedData : ITableData
     {
         public string ID { get; set; }
 
@@ -33,7 +39,7 @@ namespace GameMarketAPIServer.Models
         }
     };
 
-    class SteamUpdateScannedData : TableData
+    class SteamUpdateScannedData : ITableData
     {
         public UInt32 ID;
         public DateTime lastScanned = DateTime.UtcNow;
@@ -42,7 +48,7 @@ namespace GameMarketAPIServer.Models
             Console.WriteLine("ID: " + ID);
         }
     }
-    class XboxGameMarketData : TableData
+    class XboxGameMarketData : ITableData
     {
         public List<string> productIDs = new List<string>();
         public List<string> platforms = new List<string>();
@@ -73,7 +79,7 @@ namespace GameMarketAPIServer.Models
             Console.WriteLine($"Demo: {isDemo}");
             Console.WriteLine($"Purchasable: {purchasable}");
 
-            
+
 
             Console.WriteLine("Platforms: ");
             foreach (var platform in platforms)
@@ -83,7 +89,7 @@ namespace GameMarketAPIServer.Models
         }
     }
 
-    class XboxProfileData : TableData
+    class XboxProfileData : ITableData
     {
         public string xuID, gamertag;
         public void outputData()
@@ -93,7 +99,7 @@ namespace GameMarketAPIServer.Models
             Console.WriteLine("Gamertag: " + gamertag);
         }
     }
-    class XboxTitleDetailsData : TableData
+    class XboxTitleDetailsData : ITableData
     {
         public string productTitle { get; set; }
         public string modernTitleID { get; set; }
@@ -122,7 +128,7 @@ namespace GameMarketAPIServer.Models
             Console.WriteLine("\n");
         }
     }
-    class XboxGameTitleData : TableData
+    class XboxGameTitleData : ITableData
     {
         public string titleID, modernTitleID, titleName, displayImage;
         public List<string> devices = new List<string>();
@@ -133,10 +139,10 @@ namespace GameMarketAPIServer.Models
         }
     }
 
-    class XboxProductGroupData : TableData
+    class XboxProductGroupData : ITableData
     {
         public string groupID, groupName, productID, titleID;
-        public  void outputData()
+        public void outputData()
         {
             Console.WriteLine("Xbox Product Group Data");
             Console.WriteLine("GroupID: " + groupID);
@@ -146,11 +152,11 @@ namespace GameMarketAPIServer.Models
         }
     }
 
-    class SteamAppListData : TableData
+    class SteamAppListData : ITableData
     {
         public string name;
         public UInt32 appid;
-        public  void outputData()
+        public void outputData()
         {
             Console.WriteLine("\nSteam App List Data");
             Console.WriteLine("App Name: " + name);
@@ -158,7 +164,7 @@ namespace GameMarketAPIServer.Models
         }
     }
 
-    class SteamAppDetailsData : TableData
+    class SteamAppDetailsData : ITableData
     {
         public string appName, appType;
         public List<UInt32> dlcs, packages;
@@ -176,7 +182,7 @@ namespace GameMarketAPIServer.Models
 
 
 
-    class GameMarketMergedXboxData : TableData
+    class GameMarketMergedXboxData : ITableData
     {
 
         public int gameId;
@@ -189,30 +195,46 @@ namespace GameMarketAPIServer.Models
         }
     }
 
-    class GameMarketMergedData : TableData
+    class GameMarketMergedData : ITableData
     {
         private readonly object dataLock = new object();
-        private Int32 gameID;
+        private UInt32 gameID;
+        public string gameTitle;
         public SortedSet<string>? developers;
         public SortedSet<string>? publishers;
-        public Dictionary<DataBaseManager.Schemas, SortedSet<string>>? platformIds;
         public SortedSet<string>? xboxIds;
         public SortedSet<string>? steamIds;
+        public Dictionary<DBSchema, SortedSet<string>> platformIds;
 
-        public GameMarketMergedData(int gameID)
+        public GameMarketMergedData(UInt32 gameID)
         {
             this.gameID = gameID;
         }
-        public void updateGameID(int gameID)
+
+        public void insertPlatformIds(DBSchema schema, SortedSet<string> ids)
         {
-            lock(dataLock)
+            lock (dataLock)
+            {
+                if (platformIds.ContainsKey(schema))
+                {
+                    platformIds[schema].UnionWith(ids);
+                }
+                else
+                {
+                    platformIds.TryAdd(schema, ids);
+                }
+            }
+        }
+        public void updateGameID(UInt32 gameID)
+        {
+            lock (dataLock)
             {
                 this.gameID = gameID;
             }
         }
-        public Int32 getGameID()
+        public UInt32 getGameID()
         {
-            lock(dataLock)
+            lock (dataLock)
             {
                 return this.gameID;
             }

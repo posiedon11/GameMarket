@@ -1,6 +1,5 @@
 ﻿using GameMarketAPIServer.Services;
 using static GameMarketAPIServer.Services.XblAPIManager;
-using static GameMarketAPIServer.Services.DataBaseManager;
 using GameMarketAPIServer.Configuration;
 
 namespace GameMarketAPIServer.Models.Enums
@@ -56,18 +55,6 @@ namespace GameMarketAPIServer.Models.Enums
                 case GameMergerManager.SpecialGroupCases.SEJ: return "SEJ_";
                 case GameMergerManager.SpecialGroupCases.PCGAMEPass: return "PC & Game Pass";
                 default:return "";
-            }
-        }
-
-        private static string To_String(this DataBaseManager.Schemas schema)
-        {
-            switch(schema)
-            {
-                //case Schemas.xbox: return MainSettings.Instance.sqlServerSettings.xboxSchema;
-                //case Schemas.steam: return MainSettings.Instance.sqlServerSettings.steamSchema;
-                //case Schemas.gamemarket: return MainSettings.Instance.sqlServerSettings.gamemarketSchema;
-
-                default: return "";
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using FuzzySharp;
+﻿using AutoMapper;
+using FuzzySharp;
 using FuzzySharp.SimilarityRatio;
 using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
 using GameMarketAPIServer.Configuration;
@@ -12,6 +13,9 @@ using MySqlConnector;
 using System.Text.RegularExpressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using static SteamKit2.GC.CSGO.Internal.CGameServers_AggregationQuery_Response;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace GameMarketAPIServer.Services
 {
@@ -54,8 +58,8 @@ namespace GameMarketAPIServer.Services
     public class GamePlatformTitle : GameTitle
     {
         public SortedSet<string> ids { get; set; }
-        public DataBaseManager.Schemas schema { get; set; }
-        public GamePlatformTitle(ILogger logger, DataBaseManager.Schemas schema) : base(logger)
+        public DBSchema schema { get; set; }
+        public GamePlatformTitle(ILogger logger, DBSchema schema) : base(logger)
         {
             this.schema = schema;
             ids = new SortedSet<string>();
@@ -77,8 +81,8 @@ namespace GameMarketAPIServer.Services
 
             switch (schema)
             {
-                case DataBaseManager.Schemas.xbox: NormalizeXbox(); break;
-                case DataBaseManager.Schemas.steam: NormalizeSteam(); break;
+                case Database_structure.XboxSchema: NormalizeXbox(); break;
+                case Database_structure.SteamSchema: NormalizeSteam(); break;
             }
         }
         /// <summary>
@@ -152,35 +156,35 @@ namespace GameMarketAPIServer.Services
 
     public class GameMarketTitle : GameTitle
     {
-        public Int32 gameID { get; private set; }
+        public UInt32 gameID { get; private set; }
         public SortedSet<string>? xboxIds { get; set; }
         public SortedSet<string>? steamIds { get; set; }
 
-        public Dictionary<DataBaseManager.Schemas, SortedSet<string>> platformIds;
+        public Dictionary<DBSchema, SortedSet<string>> platformIds;
 
-        public GameMarketTitle(ILogger logger, Int32 gameId) : base(logger)
+        public GameMarketTitle(ILogger logger, UInt32 gameID) : base(logger)
         {
             this.gameID = gameID;
             xboxIds = new SortedSet<string>();
             steamIds = new SortedSet<string>();
-            platformIds = new Dictionary<DataBaseManager.Schemas, SortedSet<string>>();
+            platformIds = new Dictionary<DBSchema, SortedSet<string>>();
         }
         public GameMarketTitle(ILogger logger, GamePlatformTitle platformTitle) : base(logger)
         {
             gameID = 0;
             xboxIds = new SortedSet<string>();
             steamIds = new SortedSet<string>();
-            platformIds = new Dictionary<DataBaseManager.Schemas, SortedSet<string>>();
+            platformIds = new Dictionary<DBSchema, SortedSet<string>>();
         }
 
         public bool hasValidIds()
         {
-            return platformIds.Any(p=>p.Value != null && p.Value.Count > 0);
+            return platformIds.Any(p => p.Value != null && p.Value.Count > 0);
         }
         public void JoinPlatformTitle(GamePlatformTitle platformTitle)
         {
             if (titleName == "") titleName = platformTitle.titleName;
-            if (platformTitle.schema == DataBaseManager.Schemas.gamemarket) { return; }
+            if (platformTitle.schema == Database_structure.GameMarket) { return; }
             developers.UnionWith(platformTitle.developers);
             publishers.UnionWith(platformTitle.publishers);
 
@@ -191,12 +195,12 @@ namespace GameMarketAPIServer.Services
 
             switch (platformTitle.schema)
             {
-                case DataBaseManager.Schemas.xbox:
+                case Database_structure.XboxSchema:
                     {
                         xboxIds.UnionWith(platformTitle.ids);
                         break;
                     }
-                case DataBaseManager.Schemas.steam:
+                case Database_structure.SteamSchema:
                     {
                         steamIds.UnionWith(platformTitle.ids);
                         break;
@@ -289,9 +293,10 @@ namespace GameMarketAPIServer.Services
     }
     public class GameMergerManager
     {
-        private IDataBaseManager dbManager;
         private ILogger logger;
         private MainSettings settings;
+        private IMapper mapper;
+        private IServiceScopeFactory scopeFactory;
 
         public enum SpecialGroupCases
         {
@@ -314,75 +319,74 @@ namespace GameMarketAPIServer.Services
         };
 
 
-        public GameMergerManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, ILogger<GameMergerManager> logger)
+        #region Old Stuff
+        public GameMergerManager( IOptions<MainSettings> settings, ILogger<GameMergerManager> logger,
+            IServiceScopeFactory scopeFactory, IMapper mapper)
         {
-            this.dbManager = dbManager;
             this.settings = settings.Value;
             this.logger = logger;
+            this.mapper = mapper;
+            this.scopeFactory = scopeFactory;
         }
 
+        #endregion
+
+
+        #region newstuff
         public async Task<SortedSet<GamePlatformTitle>> MergeXboxGamesAsync(SortedDictionary<string, GamePlatformTitle>? testTitles = null)
         {
             try
             {
-                //title / list of ids
-                SortedDictionary<string, List<string>> mergedXbox = new SortedDictionary<string, List<string>>();
-
                 SortedSet<GamePlatformTitle> mergedTitles = new SortedSet<GamePlatformTitle>(new GamePlatformTitleComparer());
                 //id / title
-                //Dictionary<string, string> xboxTitles = new Dictionary<string, string>();
-
                 SortedDictionary<string, GamePlatformTitle> xboxTitles = new SortedDictionary<string, GamePlatformTitle>();
 
                 if (testTitles == null)
                 {
-
-
-                    using var connection = new MySqlConnection(dbManager.connectionString);
-                    DataBaseManager.Schemas schema = DataBaseManager.Schemas.xbox;
-                    await connection.OpenAsync();
-
-                    string gameTitlesSQL = $"Select modernTitleID, titleName from {schema}.{Tables.XboxGameTitles.To_String()} order by modernTitleID";
-                    //get the list of xbox titles
-                    using (var command = connection.CreateCommand())
+                    using var scope = scopeFactory.CreateScope();
                     {
-                        command.Connection = connection;
-                        command.CommandText = gameTitlesSQL;
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                xboxTitles.Add(reader.GetString(0), new GamePlatformTitle(logger, DataBaseManager.Schemas.xbox) { titleName = reader.GetString(1) });
+                        var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
 
-                            }
-                            reader.Close();
-                        }
-                    }
+                        var gameTitles = await dbService.SelectAll<XboxSchema.GameTitleTable>();
 
-                    //get the dev and pubs from each productID directly linked to titleID
-                    string gameDevPub = $@"Select modernTitleID, developerName, publisherName from {schema}.{Tables.XboxMarketDetails.To_String()} 
-                    inner join {schema}.{Tables.XboxTitleDetails.To_String()} on {schema}.{Tables.XboxTitleDetails.To_String()}.productID
-                    = {schema}.{Tables.XboxMarketDetails.To_String()}.productID order by modernTitleID";
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Connection = connection;
-                        command.CommandText = gameDevPub;
-                        using (var reader = command.ExecuteReader())
+
+                        //xboxTitles.Add(reader.GetString(0), new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = reader.GetString(1) });
+
+
+                        var context = dbService.getContext();
+
+                        var xtitles = context.xboxTitles
+                            .Include(xt => xt.TitleDetails).Where(xt => xt.lastScanned != null).ToList();
+
+                        var titleQuery = context.xboxTitles?
+                            .Where(gt => gt.lastScanned != null)
+                            ?.Include(xt => xt.TitleDetails)
+                            .ThenInclude(td => td.ProductIDNavig)
+                            .ThenInclude(pn => pn.MarketDetails)
+                            .ToList();
+
+
+                        foreach (var title in titleQuery)
                         {
-                            while (await reader.ReadAsync())
+                            if (title.TitleDetails == null) continue;
+                            var titleID = title.modernTitleID;
+                            var newPlatformTitle = new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = title.titleName };
+                            bool valid = false;
+                            foreach (var titleDetails in title.TitleDetails)
                             {
-                                var titleID = reader.GetString(0);
-                                var developers = reader.GetString(1);
-                                var publishers = reader.GetString(2);
-                                //foreach(var developer in developers.Split("/"))
-                                xboxTitles[titleID].developers.Add(developers);
-                                //foreach(var publisher in publishers.Split("/"))
-                                xboxTitles[titleID].publishers.Add(publishers);
+                                if (titleDetails?.ProductIDNavig.MarketDetails != null)
+                                {
+                                    valid = true;
+                                    newPlatformTitle.developers.Add(titleDetails.ProductIDNavig.MarketDetails.developerName);
+                                    newPlatformTitle.publishers.Add(titleDetails.ProductIDNavig.MarketDetails.publisherName);
+                                }
                             }
-                            reader.Close();
+                            if (valid)
+                                xboxTitles.Add(titleID, newPlatformTitle);
                         }
+                        xboxTitles.Count();
+
                     }
-                    connection.Close();
                 }
                 else
                 {
@@ -546,7 +550,6 @@ namespace GameMarketAPIServer.Services
                     if (!matchFound)
                     {
                         title.ids.Add(titleID);
-                        mergedXbox[title.titleName] = [titleID];
                         mergedTitles.Add(title);
                     }
                 }
@@ -572,30 +575,18 @@ namespace GameMarketAPIServer.Services
                 //id / title
                 Dictionary<int, string> steamTitles = new Dictionary<int, string>();
 
-
-                using var connection = new MySqlConnection(dbManager.connectionString);
-                await connection.OpenAsync();
-                string sql = $"Select appId, appName from {DataBaseManager.Schemas.steam}.{Tables.SteamAppDetails.To_String()} where appType = @appType";
-
-
-                //get the list of xbox titles
-                using (var command = connection.CreateCommand())
+                using var scope = scopeFactory.CreateScope();
                 {
-                    command.Connection = connection;
-                    command.CommandText = sql;
-                    command.Parameters.AddWithValue("appType", $"game");
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            steamTitles.Add(reader.GetInt32(0), reader.GetString(1));
-                        }
-                        reader.Close();
-                    }
+                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+
+                    var context = dbService.getContext();
+
+                    var steamTitlesQuery = context.steamAppDetails
+                        .Where(sad => sad.appType == "game")
+                        .Include(ds=>ds.Developers)
+                        .Include(pb=>pb.Publishers)
+                        .ToList();
                 }
-                connection.Close();
-
-
 
                 string combinedRegExp = $"";
                 const int scoreThreshold1 = 95;
@@ -624,18 +615,6 @@ namespace GameMarketAPIServer.Services
                     //var topMatches = Process.ExtractTop(titleName, mergedSteam.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 1);
 
                 }
-#if false
-                foreach (var title in mergedSteam.Keys)
-                {
-                    Console.Write($"{title}: ");
-                    foreach (var id in mergedSteam[title])
-                    {
-                        Console.Write($"\t{id}");
-                    }
-                    Console.WriteLine("\n");
-                } 
-#endif
-
 
                 return mergedSteam;
             }
@@ -645,21 +624,23 @@ namespace GameMarketAPIServer.Services
             }
         }
 
-        public async Task mergeToGameMarket(DataBaseManager.Schemas mergeSchema, SortedDictionary<string, GamePlatformTitle>? testTitles = null)
+        public async Task mergeToGameMarket(ISchema mergeSchema, SortedDictionary<string, GamePlatformTitle>? testTitles = null)
         {
             try
             {
                 SortedSet<GamePlatformTitle> gameMergeTitles = new SortedSet<GamePlatformTitle>();
+                SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
+
                 switch (mergeSchema)
                 {
-                    case DataBaseManager.Schemas.xbox:
+                    case DataBaseSchemas.XboxSchema:
                         gameMergeTitles = await MergeXboxGamesAsync(testTitles);
                         break;
-                    case DataBaseManager.Schemas.steam:
+                    case DataBaseSchemas.SteamSchema:
                         break;
 
                     //Cant merge a gamemarket game
-                    case DataBaseManager.Schemas.gamemarket:
+                    case DataBaseSchemas.GameMarketSchema:
                         return;
                 }
 
@@ -669,399 +650,179 @@ namespace GameMarketAPIServer.Services
                     return;
                 }
 
-                if (!await dbManager.validTableAsync(Tables.GameMarketGameTitles)) return;
-
-                Dictionary<int, string> gameMarketGames = new Dictionary<int, string>();
-                SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
-
-
-                using var connection = new MySqlConnection(dbManager.connectionString);
-                await connection.OpenAsync();
-                //string sql = $"Select gameId, gameTitle from {DataBaseManager.Schemas.gamemarket}.{Tables.GameMarketGameTitles.To_String()}";
-                var schema = DataBaseManager.Schemas.gamemarket;
-                string titlesTable = Tables.GameMarketGameTitles.To_String(), publisherTable = Tables.GameMarketPublishers.To_String(), developerTable = Tables.GameMarketDevelopers.To_String();
-                string sql = $@"Select {titlesTable}.gameID, {titlesTable}.gametitle, {developerTable}.developer, {publisherTable}.publisher
-                    from {schema}.{titlesTable}
-                    inner join {schema}.{developerTable} on {titlesTable}.gameID = {developerTable}.gameID
-                    inner join {schema}.{publisherTable} on {titlesTable}.gameID = {publisherTable}.gameID";
-                using (var command = connection.CreateCommand())
+                using var scope = scopeFactory.CreateScope();
                 {
-                    command.Connection = connection;
-                    command.CommandText = sql;
+                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+                    var context = dbService.getContext();
+                    var gameMarketTitles = context.gameMarketTitles.AsNoTracking()
+                        .Include(gmt => gmt.Developers)
+                        .Include(gmt => gmt.Publishers)
+                        .OrderBy(gmt => gmt.gameID).ToList();
 
-                    using (var reader = command.ExecuteReader())
+
+                    foreach (var marketTitle in gameMarketTitles)
                     {
-                        while (await reader.ReadAsync())
+                        var newMarketTitle = new GameMarketTitle(logger, marketTitle.gameID);
+                        newMarketTitle.titleName = marketTitle.gameTitle;
+                        if (marketTitle?.Developers != null)
                         {
-                            gameMarketGames.Add(reader.GetInt32(0), reader.GetString(1).ToLower());
-                            marketTitles.Add(new GameMarketTitle(logger, reader.GetInt32(0)) { titleName = reader.GetString(1).ToLower() });
-                        }
-                    }
-                }
-
-
-                connection.Close();
-                Dictionary<string, List<GameMarketTitle>> developerTitles = new Dictionary<string, List<GameMarketTitle>>();
-                Dictionary<string, List<GameMarketTitle>> publisherTitles = new Dictionary<string, List<GameMarketTitle>>();
-
-                foreach (var marketTitle in marketTitles)
-                {
-                    foreach (var dev in marketTitle.developers)
-                    {
-                        if (!developerTitles.ContainsKey(dev))
-                        {
-                            developerTitles[dev] = new List<GameMarketTitle>();
-                        }
-                        developerTitles[dev].Add(marketTitle);
-                    }
-                    foreach (var pub in marketTitle.publishers)
-                    {
-                        if (!publisherTitles.ContainsKey(pub))
-                        {
-                            publisherTitles[pub] = new List<GameMarketTitle>();
-                        }
-                        publisherTitles[pub].Add(marketTitle);
-                    }
-                }
-
-
-                foreach (var title in gameMergeTitles)
-                {
-                    bool devMatch = false, pubMatch = false;
-
-                    //try to find a match for developers
-                    foreach (var dev in title.developers)
-                    {
-                        if (developerTitles.ContainsKey(dev))
-                        {
-                            var validDevs = developerTitles[dev].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
-                            //find the top matching developers
-                            var topDevs = Process.ExtractTop(title.titleName, validDevs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
-
-                            if (topDevs.Any())
+                            foreach (var dev in marketTitle.Developers)
                             {
-
-                                //foreach (var topDev in topDevs)
-                                //{
-                                //    var temp = developerTitles[topDev.Value];
-                                //}
+                                newMarketTitle.developers.Add(dev.developer);
                             }
-
-                            devMatch = topDevs.Any(td => td.Score > 95);
-                            if (devMatch) break;
                         }
+                        if (marketTitle?.Publishers != null)
+                        {
+                            foreach (var pub in marketTitle.Publishers)
+                            {
+                                newMarketTitle.publishers.Add(pub.publisher);
+                            }
+                        }
+
+                        marketTitles.Add(newMarketTitle);
 
                     }
 
-                    //try to find a match for publishers
-                    foreach (var pub in title.publishers)
-                    {
-                        var fda = Process.ExtractTop(pub, publisherTitles.Keys, scorer: ScorerCache.Get<PartialRatioScorer>(), limit: 3, cutoff: 90);
-                        if (publisherTitles.ContainsKey(pub))
-                        {
-                            var validPubs = publisherTitles[pub].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
-                            //find the top publishers
-                            var topPubs = Process.ExtractTop(title.titleName, validPubs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
-                            pubMatch = topPubs.Any(td => td.Score > 95);
-                            if (pubMatch) break;
-                        }
-#if false
-                        if (true)
-                        {
-                            pubMatch = true;
-                        }
-                        else { pubMatch = false; } 
-#endif
-                    }
+                    var (developerTitles, publisherTitles) = getDevPubTitles(marketTitles);
 
-
-                    bool matchFound = false;
-                    if (devMatch || pubMatch)
+                    foreach (var title in gameMergeTitles)
                     {
-                        var matchList = marketTitles.Where(gt => !gt.isSequel(title.titleName) &&
-                            Fuzz.Ratio(gt.titleName, title.titleName) > 90)
-                            .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
-                        if (devMatch)
+                        //See if a match can be found
+                        var (devMatch, pubMatch) = FindDevPubMatch(developerTitles, publisherTitles, title);
+
+                        bool matchFound = false;
+                        if (devMatch || pubMatch)
                         {
-                            matchList = matchList.Where(gt => gt.developers.Any(d => title.developers.Contains(d)))
+                            var matchList = marketTitles.Where(gt => !gt.isSequel(title.titleName) &&
+                                Fuzz.Ratio(gt.titleName, title.titleName) > 90)
                                 .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
-                        }
-                        if (pubMatch)
-                        {
-                            matchList = matchList.Where(gt => gt.publishers.Any(d => title.publishers.Contains(d)))
-                                .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
-                        }
-
-                        var found = matchList.FirstOrDefault();
-
-
-                        if (found != null)
-                        {
-                            matchFound = true;
-                            found.JoinPlatformTitle(title);
-                        }
-                    }
-
-                    if (!matchFound)
-                    {
-                        var temp = new GameMarketTitle(logger, 0);
-                        temp.titleName=title.titleName;
-                        temp.JoinPlatformTitle(title);
-                        marketTitles.Add(temp);
-                    }
-
-                }
-
-                await insertIntoDB(marketTitles);
-            }
-            catch (Exception ex) { logger.LogError(ex.ToString());
-                return; }
-
-
-            await dbManager.processGameMarketQueueAsync();
-        }
-
-
-        private async Task insertIntoDB(SortedSet<GameMarketTitle> marketTitles)
-        {
-            foreach(var title in marketTitles)
-            {
-                if (!title.hasValidIds()) continue;
-                var mergeData = new GameMarketMergedData(title.gameID)
-                {
-                    developers = title.developers,
-                    publishers = title.publishers,
-                    xboxIds = title.xboxIds,
-                    steamIds = title.steamIds,
-                    platformIds = title.platformIds
-                };
-                if (mergeData.getGameID() == 0)
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketGameTitles, mergeData, CRUD.Create);
-                else
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketGameTitles, mergeData, CRUD.Update);
-
-                if (mergeData.developers != null && mergeData.developers.Any())
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketDevelopers, mergeData, CRUD.Create);
-                
-                if (mergeData.publishers != null && !mergeData.publishers.Any())
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketPublishers, mergeData, CRUD.Create);
-
-                foreach(var kvp in mergeData.platformIds.Where(s=>s.Value.Any()))
-                {
-                    switch(kvp.Key)
-                    {
-                        case DataBaseManager.Schemas.xbox:
-                            await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketXboxLink, mergeData, CRUD.Create);
-                            break;
-                        case DataBaseManager.Schemas.steam:
-                            await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketSteamLink, mergeData, CRUD.Create);
-                            break;
-                    }
-                    
-                }
-                //if xboxIds and steam ids are empty, dont add it
-                //add to xbox
-                if (mergeData.xboxIds != null && mergeData.xboxIds.Count() > 0)
-                {
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketGameTitles, mergeData, CRUD.Update);
-                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketXboxLink, mergeData, CRUD.Create);
-                    await dbManager.processGameMarketQueueAsync();
-                }
-            }
-        }
-        public async Task mergeXboxToGameMarketGames()
-        {
-            try
-            {
-                Tables table = Tables.GameMarketGameTitles;
-                if (!await dbManager.validTableAsync(Tables.GameMarketGameTitles))
-                {
-                    return;
-                }
-                Dictionary<int, string> gameMarketGames = new Dictionary<int, string>();
-
-                using var connection = new MySqlConnection(dbManager.connectionString);
-                await connection.OpenAsync();
-                string sql = $"Select gameId, gameTitle from {DataBaseManager.Schemas.gamemarket}.{Tables.GameMarketGameTitles.To_String()}";
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.Connection = connection;
-                    command.CommandText = sql;
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            gameMarketGames.Add(reader.GetInt32(0), reader.GetString(1).ToLower());
-                        }
-                    }
-                }
-
-
-
-                var xboxGames = await MergeXboxGamesAsync(null);
-                //Search for existing
-                var minMatchThreshold = 80;
-
-                int queueSize = 4;
-#if false
-                foreach (var xboxGame in xboxGames)
-                {
-
-                    PriorityQueue<int, int> topRe = new PriorityQueue<int, int>(queueSize, Comparer<int>.Create((x, y) => x.CompareTo(y)));
-                    // var topResults = Process.ExtractTop(xboxGame, gameMarketGames.Values, scorer: ScorerCache.Get<PartialRatioScorer>() );
-                    //get the top relusts for fuzz match.
-                    foreach (var marketGame in gameMarketGames.Keys)
-                    {
-                        var score = Fuzz.PartialRatio(xboxGame, gameMarketGames[marketGame]);
-                        topRe.Enqueue(marketGame, score);
-                        while (topRe.Count > queueSize)
-                        {
-                            topRe.Dequeue();
-                        }
-                    }
-                    var topMa = topRe.UnorderedItems.OrderByDescending(x => x.Priority).ToList();
-                    ;
-
-                    //foreach(var match in topMa)
-                    //{
-                    //    Console.WriteLine($"{xboxGame} matches with {gameMarketGames[match.Element]} with score: {match.Priority}");
-                    //}
-
-                    if (topMa.Any() && topMa.First().Priority > minMatchThreshold)
-                    {
-                        foreach (var match in topMa)
-                        {
-                            switch (match.Priority)
+                            if (devMatch)
                             {
-                                case 100:
-                                    var mergeData = new GameMarketMergedXboxData()
-                                    {
-                                        gameId = match.Element,
-                                        gameTitle = gameMarketGames[match.Element],
-                                        titleIds = xboxGames[xboxGame]
-                                    };
-                                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketGameTitles, mergeData, CRUD.Update);
-                                    await dbManager.EnqueueGameMarketQueueAsync(Tables.GameMarketXboxLink, mergeData, CRUD.Create);
-                                    await dbManager.processGameMarketQueueAsync();
-                                    break;
-                                default:
-                                    await dbManager.EnqueueGameMarketQueueAsync([Tables.GameMarketGameTitles, Tables.GameMarketXboxLink], new GameMarketMergedXboxData() { gameId = 0, gameTitle = xboxGame, titleIds = xboxGames[xboxGame] }, CRUD.Create);
-                                    await dbManager.processGameMarketQueueAsync();
-                                    break;
+                                matchList = matchList.Where(gt => gt.developers.Any(d => title.developers.Contains(d)))
+                                    .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
+                            }
+                            if (pubMatch)
+                            {
+                                matchList = matchList.Where(gt => gt.publishers.Any(d => title.publishers.Contains(d)))
+                                    .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
+                            }
+
+
+                            var found = matchList.FirstOrDefault();
+
+                            if (found != null)
+                            {
+                                matchFound = true;
+
+                                found.JoinPlatformTitle(title);
                             }
                         }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"No Mathes found for {xboxGame}");
-                        await dbManager.EnqueueGameMarketQueueAsync([Tables.GameMarketGameTitles, Tables.GameMarketXboxLink], new GameMarketMergedXboxData() { gameId = 0, gameTitle = xboxGame, titleIds = xboxGames[xboxGame] }, CRUD.Create);
-                        await dbManager.processGameMarketQueueAsync();
-                    }
-#if false
-                    //If there are results
-                    if (topResults.Any() && topResults.First().Score > 70)
-                    {
-                        foreach (var result in topResults)
+
+                        if (!matchFound)
                         {
-                            if (result.Score > 80)
-                            {
-                                // Console.WriteLine($"{xboxGame} matches with {result.Value} with score: {result.Score}");
-                            }
-                            switch (result.Score)
-                            {
-                                case 100:
-                                    await dbManager.InsertGameMarketQueueAsync([Tables.GameMarketGameTitles, Tables.GameMarketXboxLink], new GameMarketMergedXboxData() { gameId = 0, gameTitle = xboxGame, titleIds = xboxGames[xboxGame] }, CRUD.Create);
-                                    await dbManager.processGameMarketQueueAsync();
-                                    break;
-                                case 95:
-                                    break;
-                                case 90:
-                                    break;
-                                case 80:
+                            var temp = new GameMarketTitle(logger, 0);
 
-                                    break;
-                            }
+                            temp.titleName = title.titleName;
+                            temp.JoinPlatformTitle(title);
+                            marketTitles.Add(temp);
                         }
-                    }
-                    //no results
-                    else
-                    {
-                        Console.WriteLine($"No Mathes found for {xboxGame}");
-                        await dbManager.InsertGameMarketQueueAsync([Tables.GameMarketGameTitles, Tables.GameMarketXboxLink], new GameMarketMergedXboxData() { gameId = 0, gameTitle = xboxGame, titleIds = xboxGames[xboxGame] }, CRUD.Create);
-                        await dbManager.processGameMarketQueueAsync();
-                    } 
-#endif
-                } 
-#endif
-                //Add to it
-                //Fuzzy match found nothing
-            }
-            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
-        }
 
-        public async Task mergeSteamToGameMarketGames()
-        {
-            Tables table = Tables.GameMarketGameTitles;
-            if (!await dbManager.validTableAsync(table))
+                    }
+
+
+                    marketTitles.Count();
+                    ICollection<GameMarketSchema.GameTitleTable> gameTitleTables = new List<GameMarketSchema.GameTitleTable>();
+                    foreach (var title in marketTitles)
+                    {
+                        gameTitleTables.Add(MappingProfile.MapTitleTalbe(title));
+
+
+                    }
+                    await dbService.AddUpdateTables(gameTitleTables);
+                }
+
+
+            }
+            catch (Exception ex)
             {
+                logger.LogError(ex.ToString());
                 return;
             }
+        }
 
-            Dictionary<int, string> gameMarketGames = new Dictionary<int, string>();
+        #endregion
 
-            using var connection = new MySqlConnection(dbManager.connectionString);
-            await connection.OpenAsync();
-            string sql = $"Select gameId, gameTitle from {DataBaseManager.Schemas.gamemarket}.{table.To_String()}";
+        private (Dictionary<string, List<GameMarketTitle>>, Dictionary<string, List<GameMarketTitle>>) getDevPubTitles(SortedSet<GameMarketTitle> marketTitles)
+        {
+            Dictionary<string, List<GameMarketTitle>> developerTitles = new Dictionary<string, List<GameMarketTitle>>();
+            Dictionary<string, List<GameMarketTitle>> publisherTitles = new Dictionary<string, List<GameMarketTitle>>();
 
-            using (var command = connection.CreateCommand())
+            foreach (var marketTitle in marketTitles)
             {
-                command.Connection = connection;
-                command.CommandText = sql;
-
-                using (var reader = command.ExecuteReader())
+                foreach (var dev in marketTitle.developers)
                 {
-                    while (await reader.ReadAsync())
+                    if (!developerTitles.ContainsKey(dev))
                     {
-                        gameMarketGames.Add(reader.GetInt32(0), reader.GetString(1).ToLower());
+                        developerTitles[dev] = new List<GameMarketTitle>();
                     }
+                    developerTitles[dev].Add(marketTitle);
+                }
+                foreach (var pub in marketTitle.publishers)
+                {
+                    if (!publisherTitles.ContainsKey(pub))
+                    {
+                        publisherTitles[pub] = new List<GameMarketTitle>();
+                    }
+                    publisherTitles[pub].Add(marketTitle);
+                }
+            }
+            return (developerTitles, publisherTitles);
+
+
+        }
+
+        private (bool, bool) FindDevPubMatch(Dictionary<string, List<GameMarketTitle>> developerTitles, Dictionary<string, List<GameMarketTitle>> publisherTitles, GamePlatformTitle title)
+        {
+            bool devMatch = false, pubMatch = false;
+            //try to find a match for developers
+            foreach (var dev in title.developers)
+            {
+                if (developerTitles.ContainsKey(dev))
+                {
+                    var validDevs = developerTitles[dev].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
+                    //find the top matching developers
+                    var topDevs = Process.ExtractTop(title.titleName, validDevs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+
+                    if (topDevs.Any())
+                    {
+
+                        //foreach (var topDev in topDevs)
+                        //{
+                        //    var temp = developerTitles[topDev.Value];
+                        //}
+                    }
+
+                    devMatch = topDevs.Any(td => td.Score > 95);
+                    if (devMatch) break;
+                }
+
+            }
+
+            //try to find a match for publishers
+            foreach (var pub in title.publishers)
+            {
+                var fda = Process.ExtractTop(pub, publisherTitles.Keys, scorer: ScorerCache.Get<PartialRatioScorer>(), limit: 3, cutoff: 90);
+                if (publisherTitles.ContainsKey(pub))
+                {
+                    var validPubs = publisherTitles[pub].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
+                    //find the top publishers
+                    var topPubs = Process.ExtractTop(title.titleName, validPubs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+                    pubMatch = topPubs.Any(td => td.Score > 95);
+                    if (pubMatch) break;
                 }
             }
 
-            connection.Close();
-
-
-
-            var steamGames = await MergeSteamGamesAsync();
-            var minMatchThreshold = 80;
-
-            int queueSize = 4;
-
-            foreach (var steamgame in steamGames.Keys)
-            {
-
-
-                PriorityQueue<int, int> topResults = new PriorityQueue<int, int>(queueSize, Comparer<int>.Create((x, y) => x.CompareTo(y)));
-                // var topResults = Process.ExtractTop(xboxGame, gameMarketGames.Values, scorer: ScorerCache.Get<PartialRatioScorer>() );
-                //get the top relusts for fuzz match.
-                foreach (var marketGame in gameMarketGames.Keys)
-                {
-                    var score = Fuzz.PartialRatio(steamgame, gameMarketGames[marketGame]);
-                    topResults.Enqueue(marketGame, score);
-                    while (topResults.Count > queueSize)
-                    {
-                        topResults.Dequeue();
-                    }
-                }
-                var topMatcjes = topResults.UnorderedItems.OrderByDescending(x => x.Priority).ToList();
-
-                foreach (var match in topMatcjes)
-                {
-                    Console.WriteLine($"{steamgame} matches with {gameMarketGames[match.Element]} with score: {match.Priority}");
-                }
-                Console.WriteLine("\n");
-            }
+            return (devMatch, pubMatch);
         }
     }
 }
