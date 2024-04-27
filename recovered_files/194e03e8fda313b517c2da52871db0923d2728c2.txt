@@ -1,0 +1,1521 @@
+﻿using AutoMapper;
+using FuzzySharp;
+using FuzzySharp.SimilarityRatio;
+using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
+using GameMarketAPIServer.Configuration;
+using GameMarketAPIServer.Models;
+using GameMarketAPIServer.Models.Enums;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using MySqlConnector;
+using System.Text.RegularExpressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using static SteamKit2.GC.CSGO.Internal.CGameServers_AggregationQuery_Response;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+
+namespace GameMarketAPIServer.Services
+{
+<<<<<<< Updated upstream
+    public class GameMergerManager
+    {
+        IDataBaseManager dbManager;
+        MainSettings settings;
+=======
+
+    public class GameTitle
+    {
+        protected ILogger logger { get; }
+        public string titleName { get; set; }
+        public SortedSet<string> developers { get; set; }
+        public SortedSet<string> publishers { get; set; }
+
+        public GameTitle(ILogger logger)
+        {
+            this.logger = logger;
+            titleName = string.Empty;
+            developers = new SortedSet<string>();
+            publishers = new SortedSet<string>();
+        }
+        public static bool isSequel(string title1, string title2)
+        {
+            var regex = new Regex(@"\d+$");
+            var match1 = regex.Match(title1);
+            var match2 = regex.Match(title2);
+            if (title1 == "zombie derby 2" && title2 == "zombie derby")
+            {
+                Console.WriteLine();
+            }
+            if (match1.Success && match2.Success)
+                return match1.Value != match2.Value;
+            else
+            {
+                return match1.Success != match2.Success;
+            }
+        }
+        public bool isSequel(string title1)
+        {
+            return isSequel(titleName, title1);
+        }
+    }
+    public class GamePlatformTitle : GameTitle
+    {
+        public SortedSet<string> ids { get; set; }
+        public DBSchema schema { get; set; }
+        public GamePlatformTitle(ILogger logger, DBSchema schema) : base(logger)
+        {
+            this.schema = schema;
+            ids = new SortedSet<string>();
+        }
+
+        protected List<string> removeReg = new List<string>()
+        {
+            //removing anything like (something)
+            @" \((.*?)\)$",
+            //remove all nonletters/numbers
+            "[^\\p{L}\\p{Nd}:?;.' ]",
+            @"\\s{2,|"
+        };
+        public void Normalize()
+        {
+
+            //replace stuff
+            titleName = Regex.Replace(titleName, "\\s+|[-]", " ", RegexOptions.IgnoreCase);
+
+            switch (schema)
+            {
+                case Database_structure.XboxSchema: NormalizeXbox(); break;
+                case Database_structure.SteamSchema: NormalizeSteam(); break;
+            }
+        }
+        /// <summary>
+        /// Outputs data in different contexs
+        /// </summary>
+        /// <param name="mode">0: all<para> 1: normalTest</para><para>2: mergeTest.</para></param>
+        public void output(int mode = 0)
+        {
+            string devOutput = "\t\t";
+            string pubOutput = "\t\t";
+            string idOutput = "\t\t";
+            foreach (var dev in developers)
+                devOutput += $"{dev}; ";
+            foreach (var pub in publishers)
+                pubOutput += $"{pub}; ";
+            foreach (var id in ids)
+                idOutput += $"{id}; ";
+
+            logger.LogDebug(titleName);
+            logger.LogDebug($"\tDevelopers:\n{devOutput}");
+            logger.LogDebug($"\tPublishers:\n{pubOutput}\n");
+            logger.LogDebug($"\tIDs:\n{idOutput}");
+        }
+
+        private void NormalizeXbox()
+        {
+            List<string> xboxTitleRemoveFromName = new List<string>()
+            {
+                "for Xbox Series X|S",
+                "Xbox Series X|S",
+                "for Xbox One",
+                "Xbox One Edition",
+                "Xbox One",
+                "for Windows 10",
+                "for Windows",
+                "- Windows 10",
+                "Windows 10 Edition",
+                "PC"
+            };
+            string combinedRegExp = $"{string.Join("|", xboxTitleRemoveFromName.ConvertAll(Regex.Escape))}|{string.Join("|", removeReg)}";
+            //remove stuff
+            titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase).ToLower().Trim();
+            var delimiters = new string[] { "/", ",", "|", ";" };
+            string pattern = @"\s*(,|\s)\s*(LLC|LTD|INC|S\.?A\.?|INC\.|CORPORATION|CORP|PTY\.?|L\.?P\.?|GMBH)\.?([\/,|;]\s*|$)\s*";
+            titleName = Regex.Replace(titleName, pattern, "", RegexOptions.IgnoreCase);
+
+            var normalDevelopers = new SortedSet<string>(developers.Select(dev => Regex.Replace(dev, pattern, "$3", RegexOptions.IgnoreCase)));
+            var normalPublishers = new SortedSet<string>(publishers.Select(pub => Regex.Replace(pub, pattern, "$3", RegexOptions.IgnoreCase)));
+
+            developers.Clear();
+            publishers.Clear();
+            foreach (string normalDev in normalDevelopers)
+            {
+                foreach (string part in normalDev.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    developers.Add(part.Trim());
+                }
+            }
+            foreach (string normalPub in normalPublishers)
+            {
+                foreach (string part in normalPub.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    publishers.Add(part.Trim());
+                }
+            }
+        }
+
+        private void NormalizeSteam() { }
+
+    };
+
+    public class GameMarketTitle : GameTitle
+    {
+        public UInt32 gameID { get; private set; }
+        public SortedSet<string>? xboxIds { get; set; }
+        public SortedSet<string>? steamIds { get; set; }
+
+        public Dictionary<DBSchema, SortedSet<string>> platformIds;
+
+        public GameMarketTitle(ILogger logger, UInt32 gameID) : base(logger)
+        {
+            this.gameID = gameID;
+            xboxIds = new SortedSet<string>();
+            steamIds = new SortedSet<string>();
+            platformIds = new Dictionary<DBSchema, SortedSet<string>>();
+        }
+        public GameMarketTitle(ILogger logger, GamePlatformTitle platformTitle) : base(logger)
+        {
+            gameID = 0;
+            xboxIds = new SortedSet<string>();
+            steamIds = new SortedSet<string>();
+            platformIds = new Dictionary<DBSchema, SortedSet<string>>();
+        }
+
+        public bool hasValidIds()
+        {
+            return platformIds.Any(p => p.Value != null && p.Value.Count > 0);
+        }
+        public void JoinPlatformTitle(GamePlatformTitle platformTitle)
+        {
+            if (titleName == "") titleName = platformTitle.titleName;
+            if (platformTitle.schema == Database_structure.GameMarket) { return; }
+            developers.UnionWith(platformTitle.developers);
+            publishers.UnionWith(platformTitle.publishers);
+
+            if (!platformIds.ContainsKey(platformTitle.schema))
+                platformIds.Add(platformTitle.schema, new SortedSet<string>());
+            platformIds[platformTitle.schema].UnionWith(platformTitle.ids);
+
+
+            switch (platformTitle.schema)
+            {
+                case Database_structure.XboxSchema:
+                    {
+                        xboxIds.UnionWith(platformTitle.ids);
+                        break;
+                    }
+                case Database_structure.SteamSchema:
+                    {
+                        steamIds.UnionWith(platformTitle.ids);
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+
+    }
+    public class GameMarketTitleComparer : IComparer<GameMarketTitle>
+    {
+        private readonly int threshold;
+        public GameMarketTitleComparer(int similarityThreshold = 90)
+        {
+            threshold = similarityThreshold;
+        }
+
+        public int Compare(GameMarketTitle x, GameMarketTitle y)
+        {
+            int ratioScore = Fuzz.Ratio(x.titleName, y.titleName);
+            int partialRatioScore = Fuzz.PartialRatio(x.titleName, y.titleName);
+            int comp = string.Compare(x.titleName, y.titleName, StringComparison.Ordinal);
+
+            if (ratioScore == 100)
+            {
+                //if the title is the same, and it has the same dev/pubs, most likely same game
+                if (x.developers.Any(d => y.developers.Contains(d)) || x.publishers.Any(d => y.publishers.Contains(d)))
+                {
+                    return 0;
+                }
+                else
+                    return 1;
+            }
+            else if (ratioScore > threshold && partialRatioScore > threshold)
+            {
+                int devScore = Fuzz.TokenSortRatio(string.Join(" ", x.developers), string.Join(" ", y.developers));
+                int pubScore = Fuzz.TokenSortRatio(string.Join(" ", x.publishers), string.Join(" ", y.publishers));
+
+                if (devScore > threshold && pubScore > threshold) return 0;
+                return 1;
+
+            }
+            else
+                return comp;
+        }
+    }
+    public class GamePlatformTitleComparer : IComparer<GamePlatformTitle>
+    {
+        private readonly int threshold;
+        public GamePlatformTitleComparer(int similarityThreshold = 90)
+        {
+            threshold = similarityThreshold;
+        }
+        public int Compare(GamePlatformTitle x, GamePlatformTitle y)
+        {
+
+            if (GameTitle.isSequel(x.titleName, y.titleName))
+                return string.Compare(x.titleName, y.titleName, StringComparison.Ordinal);
+            int ratioScore = Fuzz.Ratio(x.titleName, y.titleName);
+            int partialRatioScore = Fuzz.PartialRatio(x.titleName, y.titleName);
+            if (ratioScore == 100)
+            {
+                //check to see if ids match
+                if (x.ids == y.ids)
+                {
+                    if (x.developers == y.developers && x.publishers == y.publishers)
+                    {
+                        return 0;
+                    }
+                }
+                else
+                {
+                    return string.Compare(x.ids.First(), y.ids.First());
+                }
+            }
+
+            if (ratioScore > threshold && partialRatioScore > threshold)
+            {
+                int devScore = Fuzz.TokenSortRatio(string.Join(" ", x.developers), string.Join(" ", y.developers));
+                int pubScore = Fuzz.TokenSortRatio(string.Join(" ", x.publishers), string.Join(" ", y.publishers));
+
+                if (devScore > threshold && pubScore > threshold) return 0;
+                return 0;
+            }
+            return string.Compare(x.titleName, y.titleName, StringComparison.Ordinal);
+        }
+
+    }
+    public class GameMergerManager
+    {
+        private IDataBaseManager dbManager;
+        private ILogger logger;
+        private MainSettings settings;
+        private IMapper mapper;
+        private IServiceScopeFactory scopeFactory;
+>>>>>>> Stashed changes
+
+        public enum SpecialGroupCases
+        {
+            fission,
+            SEJ,
+            PCGAMEPass,
+
+        }
+        protected List<string> xboxGroupRemoveName = new List<string>()
+        {
+            "[Fission] ",
+            "PC & Game Pass",
+            "SEJ_",
+        };
+        protected List<string> xboxTitleRemoveFromName = new List<string>()
+            {
+                "for Xbox Series X|S",
+                "Xbox Series X|S",
+                "for Xbox One",
+                "Xbox One Edition",
+                "Xbox One",
+                "for Windows 10",
+                "for Windows",
+                "- Windows 10",
+                "Windows 10 Edition",
+                "PC"
+            };
+        protected List<string> xboxIgnoreInName = new List<string>()
+        {
+            "Beta$",
+            "Test$",
+            "B.E.T.A.$"
+        };
+<<<<<<< Updated upstream
+        protected List<string> removeReg = new List<string>()
+        {
+            //removing anything like (something)
+            @" \((.*?)\)$",
+            //remove all nonletters/numbers
+            "[^\\p{L}\\p{Nd}:?;.' ]",
+            @"\\s{2,|"
+        };
+        public GameMergerManager(IDataBaseManager dbManager, IOptions<MainSettings> settings)
+        {
+            this.dbManager = dbManager;
+            this.settings = settings.Value;
+        }
+
+        public async Task<Dictionary<string, List<string>>> MergeXboxGamesAsync()
+=======
+
+
+        #region Old Stuff
+        public GameMergerManager(IDataBaseManager dbManager, IOptions<MainSettings> settings, ILogger<GameMergerManager> logger,
+            IServiceScopeFactory scopeFactory, IMapper mapper)
+        {
+            this.dbManager = dbManager;
+            this.settings = settings.Value;
+            this.logger = logger;
+            this.mapper = mapper;
+            this.scopeFactory = scopeFactory;
+        }
+
+        public async Task<SortedSet<GamePlatformTitle>> MergeXboxGamesAsyncOld(SortedDictionary<string, GamePlatformTitle>? testTitles = null)
+>>>>>>> Stashed changes
+        {
+            try
+            {
+                //title / list of ids
+                Dictionary<string, List<string>> mergedXbox = new Dictionary<string, List<string>>();
+
+                //id / title
+<<<<<<< Updated upstream
+                Dictionary<string, string> xboxTitles = new Dictionary<string, string>();
+
+=======
+                SortedDictionary<string, GamePlatformTitle> xboxTitles = new SortedDictionary<string, GamePlatformTitle>();
+>>>>>>> Stashed changes
+
+                using var connection = new MySqlConnection(dbManager.connectionString);
+                await connection.OpenAsync();
+                string sql = $"Select modernTitleID, titleName from {DataBaseManager.Schemas.xbox}.{Tables.XboxGameTitles.To_String()}";
+
+
+                //get the list of xbox titles
+                using (var command = connection.CreateCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = sql;
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+<<<<<<< Updated upstream
+                            xboxTitles.Add(reader.GetString(0), reader.GetString(1));
+=======
+                            while (await reader.ReadAsync())
+                            {
+                                xboxTitles.Add(reader.GetString(0), new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = reader.GetString(1) });
+
+                            }
+                            reader.Close();
+>>>>>>> Stashed changes
+                        }
+                        reader.Close();
+                    }
+                }
+                connection.Close();
+
+
+                Console.WriteLine("OriginalSize: " + xboxTitles.Keys.Count());
+                Console.WriteLine($"Merged Size: {mergedXbox.Keys.Count()}");
+                string combinedRegExp = $"{string.Join("|", xboxTitleRemoveFromName.ConvertAll(Regex.Escape))}|{string.Join("|", removeReg)}";
+                const int scoreThreshold1 = 95;
+                const int scoreThreshold2 = 90;
+                const int scoreThreshold3 = 80;
+
+                foreach (var titleId in xboxTitles.Keys)
+                {
+                    string titleName = xboxTitles[titleId];
+
+                    if (Regex.IsMatch(titleName, string.Join("|", xboxIgnoreInName)))
+                    {
+                        Console.WriteLine($"{titleName}::{titleId} is beta or something\n");
+                        continue;
+                    }
+                    //replace stuff
+                    titleName = Regex.Replace(titleName, "\\s+|[-]", " ", RegexOptions.IgnoreCase);
+
+                    //remove stuff
+                    titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase);
+
+                    titleName = titleName.ToLower().Trim();
+
+                    //after normalizing the titles for xbox games.
+                    if (!mergedXbox.ContainsKey(titleName))
+                        mergedXbox[titleName] = new List<string>();
+                    mergedXbox[titleName].Add(titleId);
+
+                    var topMatches = Process.ExtractTop(titleName, mergedXbox.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 1);
+
+#if false
+
+                    if (topMatches.Any())
+                    {
+                        var bestKey = topMatches.First().Value;
+                        var topScore = topMatches.First().Score;
+                        // if (topScore > scoreThreshold3)
+                        //Console.WriteLine($"{titleName} matches with {bestKey} score:{topScore}");
+                        switch (topScore)
+                        {
+
+                            //perfect match
+                            case 100:
+                                mergedXbox[bestKey].Add(titleId);
+                                Console.WriteLine($"{titleName} matches with {bestKey} score:{topScore}");
+                                break;
+                            case > scoreThreshold1:
+                                mergedXbox[bestKey].Add(titleId);
+                                //Console.WriteLine($"{titleName} matches with {bestKey} score:{topScore}");
+                                break;
+                            default:
+                                if (!mergedXbox.ContainsKey(titleName))
+                                    mergedXbox[titleName] = new List<string>();
+                                mergedXbox[titleName].Add(titleId);
+                                break;
+
+
+                        }
+                        if (!mergedXbox[bestKey].Contains(xboxTitles[titleId]))
+                        {
+                            mergedXbox[bestKey].Add(titleId);
+                        }
+                    }
+                    else
+                    {
+
+                        mergedXbox[titleName] = new List<string>();
+                        mergedXbox[titleName].Add(titleId);
+                    }
+
+#endif
+
+
+
+                }
+
+#if false
+                foreach (var title in mergedXbox.Keys)
+                {
+                    if (mergedXbox[title].Count == 1)
+                        continue;
+                    Console.Write($"Xbox Title: {title}\n\tModernIDs: ");
+                    foreach (var id in mergedXbox[title])
+                    {
+                        Console.Write($"{id}\t");
+                    }
+                    Console.WriteLine("\n\n");
+                }
+#endif
+
+                //output each title and similar games.
+#if false
+                foreach (var title in mergedXbox.Keys)
+                {
+                    var topMatches1 = Process.ExtractTop(title, mergedXbox.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 5);
+                    if (topMatches1.First().Score > 95 && topMatches1.First().Score != 100)
+                    {
+                        Console.Write($"Xbox Title: {title}\n\tModernIDs: ");
+                        foreach (var id in mergedXbox[title])
+                        {
+                            Console.Write($"{id}\t");
+                        }
+                        Console.WriteLine("");
+                    }
+                    foreach (var match in topMatches1)
+                    {
+                        if (match.Score == 100 && match.Value != title)
+                        {
+                            Console.WriteLine($"{title.Length},  {match.Value.Length}");
+                        }
+                        if (match.Score > 90 && match.Value != title)
+                        {
+                            Console.WriteLine($"{title} matches with {match.Value} score:{match.Score}");
+                        }
+                    }
+
+                } 
+#endif
+
+
+                Console.WriteLine($"OriginalSize: {xboxTitles.Count}");
+                Console.WriteLine($"Merged Size: {mergedXbox.Count}");
+
+                return mergedXbox;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw;
+            }
+
+        }
+        public async Task<Dictionary<string, List<int>>> MergeSteamGamesAsyncOld()
+        {
+
+            try
+            {
+                Dictionary<string, List<int>> mergedSteam = new Dictionary<string, List<int>>();
+
+                //id / title
+                Dictionary<int, string> steamTitles = new Dictionary<int, string>();
+
+
+                using var connection = new MySqlConnection(dbManager.connectionString);
+                await connection.OpenAsync();
+                string sql = $"Select appId, appName from {DataBaseManager.Schemas.steam}.{Tables.SteamAppDetails.To_String()} where appType = @appType";
+
+
+                //get the list of xbox titles
+                using (var command = connection.CreateCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = sql;
+                    command.Parameters.AddWithValue("appType", $"game");
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            steamTitles.Add(reader.GetInt32(0), reader.GetString(1));
+                        }
+                        reader.Close();
+                    }
+                }
+                connection.Close();
+
+
+
+                string combinedRegExp = $"{string.Join("|", removeReg)}";
+                const int scoreThreshold1 = 95;
+                const int scoreThreshold2 = 90;
+                const int scoreThreshold3 = 80;
+
+
+                foreach (var appId in steamTitles.Keys)
+                {
+                    string titleName = steamTitles[appId];
+
+
+                    //replace stuff
+                    titleName = Regex.Replace(titleName, "\\s+|[-]", " ", RegexOptions.IgnoreCase);
+
+                    //remove stuff
+                    titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase);
+
+                    titleName = titleName.ToLower().Trim();
+
+                    //after normalizing the titles for xbox games.
+                    if (!mergedSteam.ContainsKey(titleName))
+                        mergedSteam[titleName] = new List<int>();
+                    mergedSteam[titleName].Add(appId);
+
+                    //var topMatches = Process.ExtractTop(titleName, mergedSteam.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 1);
+
+                }
+#if false
+                foreach (var title in mergedSteam.Keys)
+                {
+                    Console.Write($"{title}: ");
+                    foreach (var id in mergedSteam[title])
+                    {
+                        Console.Write($"\t{id}");
+                    }
+                    Console.WriteLine("\n");
+                } 
+#endif
+
+
+                return mergedSteam;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString()); throw;
+            }
+        }
+<<<<<<< Updated upstream
+        public async Task<Dictionary<string, string>> standardizeGroupName(Dictionary<string, string> groups = null)
+        {
+            try
+            {
+                Tables groupTable = Tables.XboxGroupData;
+                Tables titleTable = Tables.XboxGroupData;
+
+                using var connection = new MySqlConnection(dbManager.connectionString);
+                //Get the list from xbox schema
+                if (groups == null) groups = new Dictionary<string, string>();
+                if (groups == null || groups.Count == 0)
+=======
+
+        public async Task mergeToGameMarketOld(DBSchema mergeSchema, SortedDictionary<string, GamePlatformTitle>? testTitles = null)
+        {
+            try
+            {
+                SortedSet<GamePlatformTitle> gameMergeTitles = new SortedSet<GamePlatformTitle>();
+
+                switch (mergeSchema)
+                {
+                    case Database_structure.XboxSchema:
+                        gameMergeTitles = await MergeXboxGamesAsyncOld(testTitles);
+                        break;
+                    case Database_structure.SteamSchema:
+                        break;
+
+                    //Cant merge a gamemarket game
+                    case Database_structure.GameMarketSchema:
+                        return;
+                }
+
+                if (gameMergeTitles == null || gameMergeTitles.Count == 0)
+                {
+                    logger.LogDebug("Titles to merge is empty");
+                    return;
+                }
+
+                if (!await dbManager.validTableAsync(Database_structure.GameMarket.gameTitles)) return;
+
+                SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
+
+
+                using var connection = new MySqlConnection(dbManager.connectionString);
+                await connection.OpenAsync();
+                var titlesTable = Database_structure.GameMarket.gameTitles;
+                var publisherTable = Database_structure.GameMarket.publishers;
+                var developerTable = Database_structure.GameMarket.developers;
+                string sql = $@"Select {titlesTable.gameID.fullPath()}, {titlesTable.gameTitle.fullPath()}, 
+                    group_concat(Distinct {developerTable.developer.fullPath()} order by {titlesTable.gameID.fullPath()} asc SEPARATOR  ' ;; ') as {developerTable.getName()} ,
+                    group_concat(Distinct {publisherTable.publisher.fullPath()} order by {titlesTable.gameID.fullPath()} asc SEPARATOR  ' ;; ') as {publisherTable.getName()}
+                    from {titlesTable.fullPath()}
+                    left join {developerTable.fullPath()} on {titlesTable.gameID.fullPath()} = {developerTable.gameID.fullPath()}
+                    left join {publisherTable.fullPath()} on {titlesTable.gameID.fullPath()} = {publisherTable.gameID.fullPath()}
+                    group by {titlesTable.gameID.fullPath()}
+                    order by {titlesTable.gameID.fullPath()}";
+                using (var command = connection.CreateCommand())
+>>>>>>> Stashed changes
+                {
+                    await connection.OpenAsync();
+                    string sql = $"Select groupID, groupName from @tableName where groupId is not null";
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.Connection = connection;
+                        command.CommandText = sql;
+                        command.Parameters.AddWithValue("tableName", $"{DataBaseManager.Schemas.xbox}.{groupTable.To_String()}");
+                        using (var reader = command.ExecuteReader())
+                        {
+<<<<<<< Updated upstream
+                            while (await reader.ReadAsync())
+=======
+
+                            //if (reader.GetString(2) == null)
+                            //    logger.LogError("Error: Developers is null");
+                            //var reader.GetString(2) ?? logger.LogError("Error: Developers is null");
+                            marketTitles.Add(new GameMarketTitle(logger, reader.GetUInt32(0))
+                            {
+                                titleName = reader.GetString(1).ToLower(),
+
+                                developers = new SortedSet<string>((reader.IsDBNull(2) ? string.Empty : reader.GetString(2)).Split(" ;; ").Where(x => !string.IsNullOrEmpty(x))),
+                                publishers = new SortedSet<string>((reader.IsDBNull(3) ? string.Empty : reader.GetString(3)).Split(" ;; ").Where(x => !string.IsNullOrEmpty(x)))
+                            }
+                            );
+                        }
+                    }
+                }
+
+
+                connection.Close();
+                Dictionary<string, List<GameMarketTitle>> developerTitles = new Dictionary<string, List<GameMarketTitle>>();
+                Dictionary<string, List<GameMarketTitle>> publisherTitles = new Dictionary<string, List<GameMarketTitle>>();
+
+                foreach (var marketTitle in marketTitles)
+                {
+                    foreach (var dev in marketTitle.developers)
+                    {
+                        if (!developerTitles.ContainsKey(dev))
+                        {
+                            developerTitles[dev] = new List<GameMarketTitle>();
+                        }
+                        developerTitles[dev].Add(marketTitle);
+                    }
+                    foreach (var pub in marketTitle.publishers)
+                    {
+                        if (!publisherTitles.ContainsKey(pub))
+                        {
+                            publisherTitles[pub] = new List<GameMarketTitle>();
+                        }
+                        publisherTitles[pub].Add(marketTitle);
+                    }
+                }
+
+
+                foreach (var title in gameMergeTitles)
+                {
+                    bool devMatch = false, pubMatch = false;
+
+                    //try to find a match for developers
+                    foreach (var dev in title.developers)
+                    {
+                        if (developerTitles.ContainsKey(dev))
+                        {
+                            var validDevs = developerTitles[dev].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
+                            //find the top matching developers
+                            var topDevs = Process.ExtractTop(title.titleName, validDevs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+
+                            if (topDevs.Any())
+>>>>>>> Stashed changes
+                            {
+                                groups.Add(reader.GetString(0), reader.GetString(1));
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+
+
+                Dictionary<string, string> returnGroups = new Dictionary<string, string>();
+                foreach (var groupID in groups.Keys)
+                {
+                    string groupName = groups[groupID];
+                    //remove all reg commands in it;
+                    foreach (SpecialGroupCases thing in Enum.GetValues(typeof(SpecialGroupCases)))
+                    {
+                        if (Regex.IsMatch(groupName, Regex.Escape(thing.ToString()), RegexOptions.IgnoreCase))
+                        {
+                            switch (thing)
+                            {
+                                //Some group names are weird
+                                case SpecialGroupCases.PCGAMEPass:
+                                case SpecialGroupCases.SEJ:
+                                    {
+                                        await connection.OpenAsync();
+                                        using (var command = connection.CreateCommand())
+                                        {
+                                            command.Connection = connection;
+                                            command.CommandText = $"Select titleName from {DataBaseManager.Schemas.xbox}.{Tables.XboxGameTitles.To_String()} where groupId = @groupId";
+                                            command.Parameters.AddWithValue("groupID", groupID);
+
+                                            using (var reader = command.ExecuteReader())
+                                            {
+                                                while (await reader.ReadAsync())
+                                                {
+                                                    groupName = reader.GetString(0);
+                                                }
+                                            }
+
+                                            connection.Close();
+                                        }
+                                        break;
+                                    }
+
+                                //remove fission
+                                case SpecialGroupCases.fission:
+                                    {
+                                        groupName = Regex.Replace(groupName, Regex.Escape(thing.To_String()), "", RegexOptions.IgnoreCase);
+                                        groupName = Regex.Replace(groupName, @" \((.*?)\)$", "");
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+
+
+                    if (groupName != "")
+                        groups[groupID] = groupName;
+
+                    foreach (var reg in removeReg)
+                    {
+                        groupName = Regex.Replace(groupName, reg, "", RegexOptions.IgnoreCase);
+                    }
+
+                    groupName = groupName.ToLower();
+
+                    foreach (var substr in xboxGroupRemoveName)
+                    {
+<<<<<<< Updated upstream
+                        //IDK why this games group is this
+                        groupName = groupName.Replace(substr.ToLower(), "");
+
+=======
+                        var temp = new GameMarketTitle(logger, 0);
+                        temp.titleName = title.titleName;
+                        temp.JoinPlatformTitle(title);
+                        marketTitles.Add(temp);
+>>>>>>> Stashed changes
+                    }
+                    returnGroups.Add(groupID, groupName);
+
+
+                }
+
+<<<<<<< Updated upstream
+
+
+
+
+
+                return returnGroups;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new Dictionary<string, string>();
+            }
+        }
+
+        public async Task mergeXboxToGameMarketGames()
+        {
+            try
+            {
+                Tables table = Tables.GameMarketGameTitles;
+                if (!await dbManager.validTableAsync(table))
+=======
+                await insertIntoDBOld(marketTitles);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                return;
+            }
+
+
+            await dbManager.processQueues();
+        }
+
+        private async Task insertIntoDBOld(SortedSet<GameMarketTitle> marketTitles)
+        {
+
+            foreach (var title in marketTitles)
+            {
+                if (!title.hasValidIds()) continue;
+                var mergeData = new GameMarketMergedData(title.gameID)
+                {
+                    gameTitle = title.titleName,
+                    developers = title.developers,
+                    publishers = title.publishers,
+                    xboxIds = title.xboxIds,
+                    steamIds = title.steamIds,
+                    platformIds = title.platformIds
+                };
+                if (mergeData.getGameID() == 0)
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.gameTitles, mergeData, CRUD.Create);
+                else
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.gameTitles, mergeData, CRUD.Update);
+
+                if (mergeData.developers != null && mergeData.developers.Any())
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.developers, mergeData, CRUD.Create);
+
+                if (mergeData.publishers != null && mergeData.publishers.Any())
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.publishers, mergeData, CRUD.Create);
+
+                foreach (var kvp in mergeData.platformIds.Where(s => s.Value.Any()))
+                {
+                    switch (kvp.Key)
+                    {
+                        case Database_structure.XboxSchema:
+                            await dbManager.EnqueQueueAsync(Database_structure.GameMarket.xboxLink, mergeData, CRUD.Create);
+                            break;
+                        case Database_structure.SteamSchema:
+                            await dbManager.EnqueQueueAsync(Database_structure.GameMarket.steamLink, mergeData, CRUD.Create);
+                            break;
+                    }
+
+                }
+                //if xboxIds and steam ids are empty, dont add it
+                //add to xbox
+                await dbManager.processQueues(Database_structure.GameMarket);
+            }
+        }
+        #endregion
+
+
+        #region newstuff
+        public async Task<SortedSet<GamePlatformTitle>> MergeXboxGamesAsync(SortedDictionary<string, GamePlatformTitle>? testTitles = null)
+        {
+            try
+            {
+                SortedSet<GamePlatformTitle> mergedTitles = new SortedSet<GamePlatformTitle>(new GamePlatformTitleComparer());
+                //id / title
+                SortedDictionary<string, GamePlatformTitle> xboxTitles = new SortedDictionary<string, GamePlatformTitle>();
+
+                if (testTitles == null)
+>>>>>>> Stashed changes
+                {
+                    using var scope = scopeFactory.CreateScope();
+                    {
+                        var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+
+                        var gameTitles = await dbService.SelectAll<XboxSchema.GameTitleTable>();
+
+
+                        //xboxTitles.Add(reader.GetString(0), new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = reader.GetString(1) });
+
+
+                        var context = dbService.getContext();
+
+                        var xtitles = context.xboxTitles
+                            .Include(xt => xt.TitleDetails).Where(xt => xt.lastScanned != null).ToList();
+
+                        var titleQuery = context.xboxTitles?
+                            .Where(gt => gt.lastScanned != null)
+                            ?.Include(xt => xt.TitleDetails)
+                            .ThenInclude(td=>td.ProductIDNavig)
+                            .ThenInclude(pn=>pn.MarketDetails)
+                            .ToList();
+
+
+                        foreach (var title in titleQuery)
+                        {
+                            if(title.TitleDetails == null) continue;
+                            var titleID = title.modernTitleID;
+                            var newPlatformTitle = new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = title.titleName };
+                            bool valid = false;
+                            foreach (var titleDetails in title.TitleDetails)
+                            {
+                                if(titleDetails?.ProductIDNavig.MarketDetails != null)
+                                {
+                                    valid = true;
+                                    newPlatformTitle.developers.Add(titleDetails.ProductIDNavig.MarketDetails.developerName);
+                                    newPlatformTitle.publishers.Add(titleDetails.ProductIDNavig.MarketDetails.publisherName);
+                                }
+                            }
+                            if(valid)
+                                xboxTitles.Add(titleID, newPlatformTitle);
+                        }
+                        xboxTitles.Count();
+                        
+                    }       
+                }
+                else
+                {
+                    xboxTitles = testTitles;
+                }
+                logger.LogTrace($"OriginalSize: {xboxTitles.Keys.Count()}");
+                logger.LogTrace($"Merged Size: {mergedTitles.Count()}");
+
+                const int scoreThreshold1 = 95;
+                const int scoreThreshold2 = 90;
+                const int scoreThreshold3 = 80;
+
+                //create dev and pub list
+                Dictionary<string, List<GamePlatformTitle>> developerTitles = new Dictionary<string, List<GamePlatformTitle>>();
+                Dictionary<string, List<GamePlatformTitle>> publisherTitles = new Dictionary<string, List<GamePlatformTitle>>();
+
+                //populate dev and pub list
+                foreach (var game in xboxTitles.Values)
+                {
+                    game.Normalize();
+                    foreach (var dev in game.developers)
+                    {
+                        if (!developerTitles.ContainsKey(dev))
+                            developerTitles[dev] = new List<GamePlatformTitle>();
+                        developerTitles[dev].Add(game);
+                    }
+                    foreach (var pub in game.publishers)
+                    {
+                        if (!publisherTitles.ContainsKey(pub))
+                            publisherTitles[pub] = new List<GamePlatformTitle>();
+                        publisherTitles[pub].Add(game);
+                    }
+                }
+
+                foreach (var titleID in xboxTitles.Keys)
+                {
+                    var title = xboxTitles[titleID];
+                    bool devMatch = false, pubMatch = false;
+
+                    //title will be ignored
+                    if (Regex.IsMatch(title.titleName, string.Join("|", xboxIgnoreInName)))
+                    {
+                        logger.LogTrace($"{title.titleName}::{titleID} is beta or something\n");
+                        continue;
+                    }
+
+
+
+                    //try to find a match for developers
+                    foreach (var dev in title.developers)
+                    {
+                        if (developerTitles.ContainsKey(dev))
+                        {
+                            var validDevs = developerTitles[dev].Where(t => t != title).ToList();
+                            //find the top matching developers
+                            var topDevs = Process.ExtractTop(title.titleName, validDevs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+
+                            if (topDevs.Any())
+                            {
+
+                                //foreach (var topDev in topDevs)
+                                //{
+                                //    var temp = developerTitles[topDev.Value];
+                                //}
+                            }
+
+                            devMatch = topDevs.Any(td => td.Score > 95);
+                            if (devMatch) break;
+                        }
+
+                    }
+                    //try to find a match for publishers
+                    foreach (var pub in title.publishers)
+                    {
+                        if (publisherTitles.ContainsKey(pub))
+                        {
+                            var validPubs = publisherTitles[pub].Where(t => t != title).ToList();
+                            //find the top publishers
+                            var topPubs = Process.ExtractTop(title.titleName, validPubs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+                            pubMatch = topPubs.Any(td => td.Score > 95);
+                            if (pubMatch) break;
+                        }
+#if false
+                        if (true)
+                        {
+                            pubMatch = true;
+                        }
+                        else { pubMatch = false; } 
+#endif
+                    }
+
+                    bool matchFound = false;
+                    //pretty much the same game
+                    if (devMatch && pubMatch)
+                    {
+
+                        //GameTitle found = mergedTitle.FirstOrDefault(gt =>
+                        //Fuzz.Ratio(gt.titleName, title.titleName) > 90 &&
+                        //!GameTitleComparer.isSequel(gt.titleName,title.titleName) &&
+                        //gt.developers.Any(d => title.developers.Contains(d)) &&
+                        //gt.publishers.Any(p => title.publishers.Contains(p)));
+
+
+                        GamePlatformTitle found = mergedTitles
+                            .Where(gt => !gt.isSequel(title.titleName) &&
+                            Fuzz.Ratio(gt.titleName, title.titleName) > 90 &&
+                             gt.developers.Any(d => title.developers.Contains(d)) &&
+                             gt.publishers.Any(p => title.publishers.Contains(p)))
+                            .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName))  // Order by descending match quality
+                            .FirstOrDefault();
+
+
+                        if (found != null)
+                        {
+                            logger.LogDebug($"Dev & Pub Match for:  {titleID}. Merging: ");
+                            title.output(2);
+                            found.output(2);
+                            matchFound = true;
+                            found.developers.UnionWith(title.developers);
+                            found.publishers.UnionWith(title.publishers);
+                            found.ids.Add(titleID);
+                        }
+                    }
+                    //most likely the same game
+                    else if (devMatch)
+                    {
+                        GamePlatformTitle found = mergedTitles.FirstOrDefault(gt =>
+                        Fuzz.Ratio(gt.titleName, title.titleName) > 90 &&
+                        gt.developers.Any(d => title.developers.Contains(d)));
+
+
+                        if (found != null)
+                        {
+                            logger.LogDebug($"Dev Match for:  {titleID}. Merging:");
+                            title.output(2);
+                            found.output(2);
+                            matchFound = true;
+                            found.developers.UnionWith(title.developers);
+                            found.publishers.UnionWith(title.publishers);
+                            found.ids.Add(titleID);
+                        }
+                    }
+                    else if (pubMatch)
+                    {
+                        GamePlatformTitle found = mergedTitles.FirstOrDefault(gt =>
+                        Fuzz.PartialRatio(gt.titleName, title.titleName) > 90 &&
+                        gt.publishers.Any(p => title.publishers.Contains(p)));
+                        if (found != null)
+                        {
+                            logger.LogDebug($"Pub Match for:  {titleID}. Merging: ");
+                            title.output(2);
+                            found.output(2);
+                            matchFound = true;
+                            found.developers.UnionWith(title.developers);
+                            found.publishers.UnionWith(title.publishers);
+                            found.ids.Add(titleID);
+                        }
+
+                    }
+                    //unlikely to have a match.
+                    if (!matchFound)
+                    {
+                        title.ids.Add(titleID);
+                        mergedTitles.Add(title);
+                    }
+                }
+                logger.LogTrace($"OriginalSize: {xboxTitles.Keys.Count()}");
+                logger.LogTrace($"Merged Size: {mergedTitles.Count()}");
+                logger.LogTrace($"Titles Merged: {xboxTitles.Keys.Count() - mergedTitles.Count()}");
+                return mergedTitles;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                throw;
+            }
+
+        }
+        public async Task<Dictionary<string, List<int>>> MergeSteamGamesAsync()
+        {
+
+            try
+            {
+                Dictionary<string, List<int>> mergedSteam = new Dictionary<string, List<int>>();
+
+                //id / title
+                Dictionary<int, string> steamTitles = new Dictionary<int, string>();
+
+
+                using var connection = new MySqlConnection(dbManager.connectionString);
+                await connection.OpenAsync();
+<<<<<<< Updated upstream
+                string sql = $"Select gameId, gameTitle from {DataBaseManager.Schemas.gamemarket}.{table.To_String()}";
+=======
+                string sql = $"Select appId, appName from {DataBaseManager.Schemas.steam}.{Tables.SteamAppDetails.To_String()} where appType = @appType";
+>>>>>>> Stashed changes
+
+
+                //get the list of xbox titles
+                using (var command = connection.CreateCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = sql;
+                    command.Parameters.AddWithValue("appType", $"game");
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            steamTitles.Add(reader.GetInt32(0), reader.GetString(1));
+                        }
+                        reader.Close();
+                    }
+                }
+                connection.Close();
+
+
+
+<<<<<<< Updated upstream
+                Dictionary<string, List<string>> xboxGames = await MergeXboxGamesAsync();
+                //Search for existing
+                var minMatchThreshold = 80;
+
+                int queueSize = 4;
+                foreach (var xboxGame in xboxGames.Keys)
+=======
+                string combinedRegExp = $"";
+                const int scoreThreshold1 = 95;
+                const int scoreThreshold2 = 90;
+                const int scoreThreshold3 = 80;
+
+
+                foreach (var appId in steamTitles.Keys)
+>>>>>>> Stashed changes
+                {
+                    string titleName = steamTitles[appId];
+
+
+                    //replace stuff
+                    titleName = Regex.Replace(titleName, "\\s+|[-]", " ", RegexOptions.IgnoreCase);
+
+                    //remove stuff
+                    titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase);
+
+                    titleName = titleName.ToLower().Trim();
+
+                    //after normalizing the titles for xbox games.
+                    if (!mergedSteam.ContainsKey(titleName))
+                        mergedSteam[titleName] = new List<int>();
+                    mergedSteam[titleName].Add(appId);
+
+                    //var topMatches = Process.ExtractTop(titleName, mergedSteam.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 1);
+
+                }
+#if false
+                foreach (var title in mergedSteam.Keys)
+                {
+                    Console.Write($"{title}: ");
+                    foreach (var id in mergedSteam[title])
+                    {
+                        Console.Write($"\t{id}");
+                    }
+<<<<<<< Updated upstream
+                    //no results
+                    else
+                    {
+                        Console.WriteLine($"No Mathes found for {xboxGame}");
+                        await dbManager.InsertGameMarketQueueAsync([Tables.GameMarketGameTitles, Tables.GameMarketXboxLink], new GameMarketMergedXboxData() { gameId = 0, gameTitle = xboxGame, titleIds = xboxGames[xboxGame] }, CRUD.Create);
+                        await dbManager.processGameMarketQueueAsync();
+                    } 
+#endif
+                }
+                //Add to it
+                //Fuzzy match found nothing
+=======
+                    Console.WriteLine("\n");
+                } 
+#endif
+
+
+                return mergedSteam;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString()); throw;
+>>>>>>> Stashed changes
+            }
+        }
+
+        public async Task mergeToGameMarket(ISchema mergeSchema, SortedDictionary<string, GamePlatformTitle>? testTitles = null)
+        {
+            try
+            {
+                SortedSet<GamePlatformTitle> gameMergeTitles = new SortedSet<GamePlatformTitle>();
+                SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
+
+                switch (mergeSchema)
+                {
+                    case DataBaseSchemas.XboxSchema:
+                        gameMergeTitles = await MergeXboxGamesAsync(testTitles);
+                        break;
+                    case DataBaseSchemas.SteamSchema:
+                        break;
+
+                    //Cant merge a gamemarket game
+                    case DataBaseSchemas.GameMarketSchema:
+                        return;
+                }
+
+                if (gameMergeTitles == null || gameMergeTitles.Count == 0)
+                {
+                    logger.LogDebug("Titles to merge is empty");
+                    return;
+                }
+
+                using var scope = scopeFactory.CreateScope();
+                {
+                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+                    var context = dbService.getContext();
+                    var gameMarketTitles = context.gameMarketTitles.AsNoTracking()
+                        .Include(gmt => gmt.Developers)
+                        .Include(gmt=>gmt.Publishers)
+                        .OrderBy(gmt=>gmt.gameID).ToList();
+
+
+                    foreach (var marketTitle in gameMarketTitles)
+                    {
+                        var newMarketTitle = new GameMarketTitle(logger, marketTitle.gameID);
+                        newMarketTitle.titleName = marketTitle.gameTitle;
+                        if (marketTitle?.Developers != null)
+                        {
+                            foreach (var dev in marketTitle.Developers)
+                            {
+                                newMarketTitle.developers.Add(dev.developer);
+                            }
+                        }
+                        if (marketTitle?.Publishers != null)
+                        {
+                            foreach (var pub in marketTitle.Publishers)
+                            {
+                                newMarketTitle.publishers.Add(pub.publisher);
+                            }
+                        }
+
+                        marketTitles.Add(newMarketTitle);
+
+                    }
+
+                    var (developerTitles, publisherTitles) = getDevPubTitles(marketTitles);
+
+                    foreach (var title in gameMergeTitles)
+                    {
+                        //See if a match can be found
+                        var (devMatch, pubMatch) = FindDevPubMatch(developerTitles, publisherTitles, title);
+
+                        bool matchFound = false;
+                        if (devMatch || pubMatch)
+                        {
+                            var matchList = marketTitles.Where(gt => !gt.isSequel(title.titleName) &&
+                                Fuzz.Ratio(gt.titleName, title.titleName) > 90)
+                                .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
+                            if (devMatch)
+                            {
+                                matchList = matchList.Where(gt => gt.developers.Any(d => title.developers.Contains(d)))
+                                    .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
+                            }
+                            if (pubMatch)
+                            {
+                                matchList = matchList.Where(gt => gt.publishers.Any(d => title.publishers.Contains(d)))
+                                    .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));
+                            }
+
+
+                            var found = matchList.FirstOrDefault();
+
+                            if (found != null)
+                            {
+                                matchFound = true;
+                                
+                                found.JoinPlatformTitle(title);
+                            }
+                        }
+
+                        if (!matchFound)
+                        {
+                            var temp = new GameMarketTitle(logger, 0);
+
+                            temp.titleName = title.titleName;
+                            temp.JoinPlatformTitle(title);
+                            marketTitles.Add(temp);
+                        }
+
+                    }
+
+
+                    marketTitles.Count();
+                    ICollection<GameMarketSchema.GameTitleTable> gameTitleTables = new List<GameMarketSchema.GameTitleTable>();
+                    foreach( var title in marketTitles)
+                    {
+                        gameTitleTables.Add(MappingProfile.MapTitleTalbe(title));
+
+                        
+                    }
+                    await dbService.AddUpdateTables(gameTitleTables);
+                }
+
+                
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                return;
+            }
+
+
+            await dbManager.processQueues();
+        }
+
+        private async Task insertIntoDB(SortedSet<GameMarketTitle> marketTitles)
+        {
+
+            foreach (var title in marketTitles)
+            {
+                if (!title.hasValidIds()) continue;
+                var mergeData = new GameMarketMergedData(title.gameID)
+                {
+                    gameTitle = title.titleName,
+                    developers = title.developers,
+                    publishers = title.publishers,
+                    xboxIds = title.xboxIds,
+                    steamIds = title.steamIds,
+                    platformIds = title.platformIds
+                };
+                if (mergeData.getGameID() == 0)
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.gameTitles, mergeData, CRUD.Create);
+                else
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.gameTitles, mergeData, CRUD.Update);
+
+                if (mergeData.developers != null && mergeData.developers.Any())
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.developers, mergeData, CRUD.Create);
+
+                if (mergeData.publishers != null && mergeData.publishers.Any())
+                    await dbManager.EnqueQueueAsync(Database_structure.GameMarket.publishers, mergeData, CRUD.Create);
+
+                foreach (var kvp in mergeData.platformIds.Where(s => s.Value.Any()))
+                {
+                    switch (kvp.Key)
+                    {
+                        case Database_structure.XboxSchema:
+                            await dbManager.EnqueQueueAsync(Database_structure.GameMarket.xboxLink, mergeData, CRUD.Create);
+                            break;
+                        case Database_structure.SteamSchema:
+                            await dbManager.EnqueQueueAsync(Database_structure.GameMarket.steamLink, mergeData, CRUD.Create);
+                            break;
+                    }
+
+                }
+                //if xboxIds and steam ids are empty, dont add it
+                //add to xbox
+                await dbManager.processQueues(Database_structure.GameMarket);
+            }
+        }
+        #endregion
+
+        private (Dictionary<string, List<GameMarketTitle>>, Dictionary<string, List<GameMarketTitle>>) getDevPubTitles(SortedSet<GameMarketTitle> marketTitles)
+        {
+            Dictionary<string, List<GameMarketTitle>> developerTitles = new Dictionary<string, List<GameMarketTitle>>();
+            Dictionary<string, List<GameMarketTitle>> publisherTitles = new Dictionary<string, List<GameMarketTitle>>();
+
+            foreach (var marketTitle in marketTitles)
+            {
+                foreach (var dev in marketTitle.developers)
+                {
+                    if (!developerTitles.ContainsKey(dev))
+                    {
+                        developerTitles[dev] = new List<GameMarketTitle>();
+                    }
+                    developerTitles[dev].Add(marketTitle);
+                }
+                foreach (var pub in marketTitle.publishers)
+                {
+                    if (!publisherTitles.ContainsKey(pub))
+                    {
+                        publisherTitles[pub] = new List<GameMarketTitle>();
+                    }
+                    publisherTitles[pub].Add(marketTitle);
+                }
+            }
+            return (developerTitles, publisherTitles);
+
+
+        }
+
+        private (bool, bool) FindDevPubMatch(Dictionary<string, List<GameMarketTitle>> developerTitles, Dictionary<string, List<GameMarketTitle>>  publisherTitles, GamePlatformTitle title)
+        {
+            bool devMatch = false, pubMatch = false;
+            //try to find a match for developers
+            foreach (var dev in title.developers)
+            {
+                if (developerTitles.ContainsKey(dev))
+                {
+                    var validDevs = developerTitles[dev].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
+                    //find the top matching developers
+                    var topDevs = Process.ExtractTop(title.titleName, validDevs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+
+                    if (topDevs.Any())
+                    {
+
+                        //foreach (var topDev in topDevs)
+                        //{
+                        //    var temp = developerTitles[topDev.Value];
+                        //}
+                    }
+
+                    devMatch = topDevs.Any(td => td.Score > 95);
+                    if (devMatch) break;
+                }
+
+            }
+
+            //try to find a match for publishers
+            foreach (var pub in title.publishers)
+            {
+                var fda = Process.ExtractTop(pub, publisherTitles.Keys, scorer: ScorerCache.Get<PartialRatioScorer>(), limit: 3, cutoff: 90);
+                if (publisherTitles.ContainsKey(pub))
+                {
+                    var validPubs = publisherTitles[pub].Where(t => Fuzz.Ratio(t.titleName, title.titleName) > 80).ToList();
+                    //find the top publishers
+                    var topPubs = Process.ExtractTop(title.titleName, validPubs.Select(t => t.titleName).ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 3);
+                    pubMatch = topPubs.Any(td => td.Score > 95);
+                    if (pubMatch) break;
+                }
+            }
+
+            return (devMatch, pubMatch);
+        }
+    }
+}

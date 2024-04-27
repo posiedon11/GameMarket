@@ -1,0 +1,11 @@
+tree 72736f0c57362b4b937c1b119d19ab17c48232f0
+
+APICall.cs
+CompositeTableData.cs
+Contexts/
+DataBaseTables.cs
+Database structure.cs
+Enums/
+ITableData.cs
+JsonData.cs
+Mapping.cs

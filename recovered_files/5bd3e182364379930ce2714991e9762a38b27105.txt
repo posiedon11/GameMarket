@@ -1,0 +1,10 @@
+tree 5bd3e182364379930ce2714991e9762a38b27105
+
+.gitattributes
+.gitignore
+GameMarketAPIServer/
+GameMarketWebServer/
+Libraries/
+New Text Document.txt
+README.md
+Xbox APIKey.txt

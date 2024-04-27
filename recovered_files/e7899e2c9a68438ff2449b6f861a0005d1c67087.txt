@@ -1,0 +1,16 @@
+tree e7899e2c9a68438ff2449b6f861a0005d1c67087
+
+1 gamemarket.sql
+1 steam.sql
+GameMarket/
+Steam/
+Xbox/
+create steamappdev-pub.sql
+create xboxmarketdetails.sql
+drop all Steam tables.sql
+drop all Xbox tables.sql
+drop all tables.sql
+insert userprofiles.sql
+misc stuff.sql
+remove_drop tables.sql
+testing.sql

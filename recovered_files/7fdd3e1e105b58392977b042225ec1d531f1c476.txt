@@ -1,0 +1,242 @@
+﻿using GameMarketAPIServer.Models.Contexts;
+using GameMarketAPIServer.Models.TableData.GameMarket;
+using System.Threading.Tasks;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
+using GameMarketAPIServer.Models.TableData;
+
+namespace GameMarketAPIServer.Models
+{
+    public interface IRepository<T> where T : class
+    {
+        Task AddAsync(T entity);
+        Task UpdateAsync(T entity);
+    }
+
+    public interface ICompositeRepository : IRepository<CompositeTableData>
+    {
+    }
+    public interface IDataTable
+    {
+    }
+    public class CompositeTableData
+    {
+        private Dictionary<Type, HashSet<ITable>> tableData = new Dictionary<Type, HashSet<ITable>>();
+
+        public CompositeTableData(params ITable[] tableDatas)
+        {
+            foreach (var data in tableDatas)
+            {
+                var type = data.GetType();
+                if (!tableData.ContainsKey(type))
+                    tableData[type] = new HashSet<ITable>();
+                tableData[type].Add(data);
+            }
+        }
+
+        public void AddTable(ITable table)
+        {
+            var type = table.GetType();
+            if (!tableData.ContainsKey(type))
+                tableData[type] = new HashSet<ITable>();
+            tableData[type].Add(table);
+        }
+        public IEnumerable<T> GetData<T>() where T : ITable
+        {
+            if (tableData.TryGetValue(typeof(T), out var data))
+                return data.Cast<T>();
+            return Enumerable.Empty<T>();
+        }
+#if false
+        public T? GetData<T>() where T : ITable
+        {
+            if (tableData.TryGetValue(typeof(T), out var data))
+                return (T)data;
+            return default;
+        } 
+#endif
+
+
+    }
+    namespace TableData
+    {
+        namespace GameMarket
+        {
+            public class CompositeGameMarketGameTitle : IDataTable
+            {
+                public GameMarketSchema.GameTitleTable gameTitle { get; set; }
+                public List<GameMarketSchema.DeveloperTable> developers { get; set; } = new List<GameMarketSchema.DeveloperTable>();
+                public List<GameMarketSchema.PublisherTable> publishers { get; set; } = new List<GameMarketSchema.PublisherTable>();
+            }
+        }
+    }
+
+    namespace Repositories
+    {
+        public class RepositoryFactory
+        {
+            public class MarketDetailsRepository : IRepository<DataBaseSchemas.XboxSchema.MarketDetailTable>
+            {
+                private readonly DatabaseContext context;
+                public MarketDetailsRepository(DatabaseContext context)
+                {
+                    this.context = context;
+                }
+                public async Task AddAsync(XboxSchema.MarketDetailTable entity)
+                {
+                    context.Add(entity);
+                    await context.SaveChangesAsync();
+                }
+
+                public async Task UpdateAsync(XboxSchema.MarketDetailTable entity)
+                {
+                    context.Update(entity);
+                    await context.SaveChangesAsync();
+                }
+
+                public async Task Select(DataBaseSchemas.XboxSchema.MarketDetailTable entity)
+                {
+                    context.Add(entity);
+                    await context.SaveChangesAsync();
+                }
+            }
+            public class CompositeTableRepository : IRepository<CompositeTableData>
+            {
+                private readonly DatabaseContext context;
+                public CompositeTableRepository(DatabaseContext context)
+                {
+                    this.context = context;
+                }
+                public async Task AddAsync(CompositeTableData entity)
+                {
+                    context.Add(entity);
+                    await context.SaveChangesAsync();
+                }
+                public async Task UpdateAsync(CompositeTableData entity)
+                {
+                    context.Update(entity);
+
+                    await context.SaveChangesAsync();
+                }
+            }
+
+
+            public class CompositeGameTitleRepository : ICompositeRepository
+            {
+                private readonly DatabaseContext context;
+                public CompositeGameTitleRepository(DatabaseContext context)
+                {
+                    this.context = context;
+                }
+                public async Task AddAsync(CompositeTableData entity)
+                {
+                    context.Add(entity);
+                    await context.SaveChangesAsync();
+                }
+                public async Task UpdateAsync(CompositeTableData entity)
+                {
+                    context.Update(entity);
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            public class GameMarket
+            {
+                public class CompositeMergedTitleRepository : IRepository<TableData.GameMarket.CompositeGameMarketGameTitle>
+                {
+                    private readonly DatabaseContext context;
+                    public CompositeMergedTitleRepository(DatabaseContext context)
+                    {
+                        this.context = context;
+                    }
+                    public async Task AddAsync(CompositeGameMarketGameTitle entity)
+                    {
+                        context.Add(entity);
+                        await context.SaveChangesAsync();
+                    }
+                    public async Task UpdateAsync(CompositeGameMarketGameTitle entity)
+                    {
+                        context.Update(entity);
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    public class DataFactory
+    {
+        public static CompositeTableData CreateCompositeGameTitle(string sharedKey, ITableData? tableData)
+        {
+            var productIDs = new XboxSchema.ProductIDTable() { };
+            var titleDetails = new XboxSchema.TitleDetailTable() { };
+
+            var gameTitle = new XboxSchema.GameTitleTable() { };
+            if (tableData == null)
+            { }
+            else if (tableData is XboxTitleDetailsData titleData)
+            {
+                //insert here
+                productIDs.productID = titleData.productID;
+
+                titleDetails.productID = titleData.productID;
+                titleDetails.modernTitleID = titleData.modernTitleID;
+
+                //update game title
+                gameTitle.modernTitleID = titleData.modernTitleID;
+
+            }
+            return new CompositeTableData(productIDs, titleDetails, gameTitle);
+        }
+
+        public class GameMarketSchema
+        {
+            public static CompositeGameMarketGameTitle? CreateCompositeMergedTitle(ITableData tableData)
+            {
+                if (tableData == null)
+                {
+                    return null;
+                }
+
+                var composite = new CompositeGameMarketGameTitle();
+
+                if (tableData is GameMarketMergedData titleData)
+                {
+                    var gametitles = new DataBaseSchemas.GameMarketSchema.GameTitleTable(titleData.getGameID(), titleData.gameTitle);
+
+                    if (titleData.developers != null && titleData.developers.Any())
+                    {
+                        foreach (var developer in titleData.developers)
+                        {
+                            //composite.developers.Add(new DataBaseSchemas.GameMarketSchema.DevelopersTable(titleData.getGameID(), titleData.gameTitle));
+                        }
+
+                    }
+                    if (titleData.publishers != null && titleData.publishers.Any())
+                    {
+                        foreach (var publisher in titleData.publishers)
+                        {
+                            //composite.publishers.Add(new DataBaseSchemas.GameMarketSchema.PublishersTable(titleData.getGameID(), publisher));
+                        }
+                    }
+
+                }
+                return composite;
+            }
+        }
+
+    }
+
+    public class adfasdfas
+    {
+        public static void fdasf()
+        {
+            var comp = new CompositeTableData(new XboxSchema.GameTitleTable(), new XboxSchema.GameGenreTable());
+            var hello = DataFactory.CreateCompositeGameTitle("hello", new XboxTitleDetailsData());
+
+            //var compositeRep = new CompositeTableRepository(new DatabaseContext());
+        }
+    }
+
+}

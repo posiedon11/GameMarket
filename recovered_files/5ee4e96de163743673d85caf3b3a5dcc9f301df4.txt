@@ -1,0 +1,36 @@
+tree 5ee4e96de163743673d85caf3b3a5dcc9f301df4
+
+1 gamemarket.sql
+1 steam.sql
+GameMarket/
+Steam/
+Xbox/
+create gamemarketdev-pub.sql
+create gamemarkettitles.sql
+create gamemarketxboxlink.sql
+create steamappdetails.sql
+create steamappdev-pub.sql
+create steamappgenres.sql
+create steamappids.sql
+create steamappplatforms.sql
+create steampackageIDs.sql
+create steampackagedetails.sql
+create steampackages.sql
+create xboxgamebundles.sql
+create xboxgamedetails.sql
+create xboxgamegenres.sql
+create xboxgametitles.sql
+create xboxgroupdata.sql
+create xboxmarketdetails.sql
+create xboxproductID.sql
+create xboxproductPlatforms.sql
+create xboxtitledetails.sql
+create xboxtitledevices.sql
+create xboxuserprofiles.sql
+drop all Steam tables.sql
+drop all Xbox tables.sql
+drop all tables.sql
+insert userprofiles.sql
+misc stuff.sql
+remove_drop tables.sql
+testing.sql

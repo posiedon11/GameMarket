@@ -1,0 +1,61 @@
+﻿using GameMarketAPIServer.Models;
+using GameMarketAPIServer.Models.Enums;
+using GameMarketAPIServer.Services;
+using GameMarketAPIServer.Utilities.Testing;
+using Xunit;
+using Xunit.Abstractions;
+
+using static GameMarketAPIServer.Models.Database_structure;
+namespace GameMarketAPIServer.Utilities
+{
+    [Collection("Test Collection")]
+    public class TestDataBase : Test
+    {
+        public TestDataBase(ITestOutputHelper output, TestFixture fixture) : base(output, fixture)
+        {
+            //this.dbManager = new DataBaseManager(settings, dbLogger);
+        }
+
+        [Fact]
+        public void TestDBStructure()
+        {
+            try
+            {
+
+                var bbox = Database_structure.Xbox;
+                var ffs=bbox.MarketDetails.endDate.fullPath();
+                //logger.LogDebug(Database_structure.Xbox.GameBundles.var1.fullPath());
+                //var ff = Database_structure.XboxSchema.UserProfiles.Name;
+                //var fdfd = Database_structure.XboxSchema;
+              // var dfasfas= Database_structure.XboxSchema.GameBundlesTable.var1;
+               // var fdasf = bbox.GameBundles;
+
+            }catch (Exception ex) { logger.LogError(ex.Message); }
+            
+        }
+
+        [Fact]
+        public async Task TestTableCheckAsync()
+        {
+
+            //var hi = await dbManager.validTableAsync(Database_structure.Xbox.GameTitles);
+
+            await dbManager.validTableAsync(Database_structure.Xbox.GameBundles);
+            await dbManager.validTableAsync(Database_structure.Xbox.GameBundles);
+            await dbManager.validTableAsync(Database_structure.GameMarket.xboxLink);
+        }
+        [Fact]
+        public async Task TestXboxInsertion()
+        {
+            var data1 = new GameMarketMergedData(1)
+            {
+                gameTitle = "tessst"
+            };
+           
+            await dbManager.EnqueQueueAsync(Database_structure.GameMarket.gameTitles, data1, CRUD.Create);
+            await dbManager.processQueues(Database_structure.GameMarket);
+        }
+
+        
+    }
+}

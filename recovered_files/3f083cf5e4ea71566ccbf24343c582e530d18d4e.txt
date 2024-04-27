@@ -1,0 +1,13 @@
+tree 3f083cf5e4ea71566ccbf24343c582e530d18d4e
+
+create xboxgamebundles.sql
+create xboxgamedetails.sql
+create xboxgamegenres.sql
+create xboxgametitles.sql
+create xboxgroupdata.sql
+create xboxmarketdetails.sql
+create xboxproductID.sql
+create xboxproductPlatforms.sql
+create xboxtitledetails.sql
+create xboxtitledevices.sql
+create xboxuserprofiles.sql

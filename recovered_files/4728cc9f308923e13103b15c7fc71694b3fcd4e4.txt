@@ -1,0 +1,15 @@
+﻿namespace GameMarketAPIServer.Models
+{
+    public interface IAPICall
+    { 
+        string getURL();
+    }
+
+    public class APICall(string url) : IAPICall
+    {
+        private string URL { get; }= url;
+
+        public virtual string getURL() => URL;
+    }
+
+}

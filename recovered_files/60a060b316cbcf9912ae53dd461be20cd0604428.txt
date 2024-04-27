@@ -1,0 +1,18 @@
+tree 60a060b316cbcf9912ae53dd461be20cd0604428
+
+Configuration/
+Controllers/
+GameMarketAPIServer.csproj
+GameMarketAPIServer.http
+GameMarketAPIServer.sln
+JsonFiles/
+Migrations/
+Models/
+Program.cs
+Properties/
+Services/
+Utilities/
+WeatherForecast.cs
+appsettings.Development.json
+appsettings.json
+sqlQueries/

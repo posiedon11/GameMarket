@@ -1,0 +1,10 @@
+tree 14afb084437aa3a60c515cdc4a27a7e6374d96e8
+
+create steamappdetails.sql
+create steamappdev-pub.sql
+create steamappgenres.sql
+create steamappids.sql
+create steamappplatforms.sql
+create steampackageIDs.sql
+create steampackagedetails.sql
+create steampackages.sql
