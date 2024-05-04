@@ -29,7 +29,7 @@ var mainSettings = builder.Configuration.GetRequiredSection("MainSettings").Get<
 var connectionString = mainSettings.sqlServerSettings.getConnectionString();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
-
+builder.Services.AddRazorPages();
 builder.Services.AddDbContext<DatabaseContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -54,6 +54,16 @@ builder.Services.AddSingleton<XblAPIManager>();
 builder.Services.AddSingleton<StmAPIManager>();
 builder.Services.AddSingleton<GameMergerManager>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+               builder =>
+               {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 
 var app = builder.Build();
@@ -64,10 +74,11 @@ var mergerManager = app.Services.GetRequiredService<GameMergerManager>();
 
 
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-lifetime.ApplicationStarted.Register(async () =>
+lifetime.ApplicationStarted.Register( async () =>
 {
-    //xblManager.Start();
-    stmManager.Start();
+   //xblManager.Start();
+    //stmManager.Start();
+    //await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
     //settings.xboxSettings.xblAPIKey = builder.Configuration["MyApiKeys:XblAPIKey"];
     //settings.steamSettings.apiKey = builder.Configuration["MyApiKeys:SteamWebAPIKey"];
     //Console.WriteLine(settings.xboxSettings.xblAPIKey);
@@ -84,10 +95,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
-
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthorization();
 
+
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();

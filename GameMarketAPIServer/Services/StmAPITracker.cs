@@ -48,9 +48,9 @@ namespace GameMarketAPIServer.Services
         {
             var waitTime = stmSettings.apiRequestTimer - rateLimitStopwatch.Elapsed;
             if (_logger != null)
-                _logger.LogDebug("Can Call Again at: " + (DateTime.UtcNow + waitTime));
+                _logger.LogDebug("Can Call Again at: " + (DateTime.Now + waitTime));
             else
-                logger.LogDebug("Can Call Again at: " + (DateTime.UtcNow + waitTime));
+                logger.LogDebug("Can Call Again at: " + (DateTime.Now + waitTime));
             await Task.Delay(waitTime);
 
             rateLimitStopwatch.Restart();

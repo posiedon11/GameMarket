@@ -10,6 +10,7 @@ using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using SteamKit2.GC.Dota.Internal;
 using Z.BulkOperations;
+using SteamKit2.Internal;
 
 namespace GameMarketAPIServer.Services
 {
@@ -69,16 +70,27 @@ namespace GameMarketAPIServer.Services
                         var mergeIDs = productIDstring.Select(pd => allProductIDs.ContainsKey(pd) ? allProductIDs[pd] : new XboxSchema.ProductIDTable(pd)).ToHashSet();
                         await context.BulkMergeAsync(mergeIDs, options => options.IncludeGraph = false);
 
-                        await context.BulkSynchronizeAsync(titleDetails, options => {
+                        await context.BulkSynchronizeAsync(titleDetails, options =>
+                        {
                             options.IncludeGraph = false;
-                            options.ColumnPrimaryKeyExpression = x => x.productID;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.productID,
+                                x.modernTitleID
+                            };
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.modernTitleID;
                         });
+
                         var detailsList = titleDetails.Select(x => x.productID).ToHashSet();
+
                         await context.BulkSynchronizeAsync(gameBundles, options =>
                         {
                             options.IncludeGraph = false;
-                            options.ColumnPrimaryKeyExpression = x => x.relatedProductID;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.productID,
+                                x.relatedProductID
+                            };
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.productID;
                         });
                     }
@@ -107,29 +119,13 @@ namespace GameMarketAPIServer.Services
                         int batchSize = 20000;
                         int total = appIDs.Count;
                         int processed = 0;
-                        await context.BulkMergeAsync(appIDs, options => {
+                        await context.BulkMergeAsync(appIDs, options =>
+                        {
                             options.IncludeGraph = false;
                             options.AllowDuplicateKeys = false;
                             options.BatchTimeout = 300;
                             options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
                         });
-                        //while (processed < total)
-                        //{
-                        //    var batch = appIDs.Skip(processed).Take(batchSize).ToList();
-                        //    await context.BulkMergeAsync(batch, options => { 
-                        //        options.IncludeGraph = false;
-                        //        options.AllowDuplicateKeys = false;
-                        //        options.BatchTimeout = 300;
-                        //        options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
-                        //    });
-                        //    processed += batchSize;
-                        //}
-                        //    await context.BulkMergeAsync(appIDs, options =>
-                        //    {
-                        //        options.IncludeGraph = false;
-                        //        options.BatchTimeout = 300;
-                        //        options.IgnoreOnMergeUpdateExpression = x => x.lastScanned;
-                        //});
                     }
 
                     else if (castedTables is ICollection<SteamSchema.AppDetailsTable> appDetails)
@@ -140,14 +136,31 @@ namespace GameMarketAPIServer.Services
                         var allPlat = appDetails.SelectMany(ad => ad.Platforms ?? Enumerable.Empty<SteamSchema.AppPlatformsTable>()).Where(g => g != null).ToHashSet();
                         var allPackeges = appDetails.SelectMany(ad => ad.Packeges ?? Enumerable.Empty<SteamSchema.PackagesTable>()).Where(g => g != null).ToHashSet();
 
+
                         var allPackageIDstring = allPackeges.Select(ad => ad.packageID).Where(g => g != null).ToHashSet();
+                        var allIDstring = appDetails.Select(ad => ad.appID).ToHashSet();
+
+                        var allAppIDs = appDetails.Select(ad => new SteamSchema.AppIDsTable() { appID = ad.appID }).ToHashSet();
 
                         var allPackageIDs = allPackageIDstring.Select(ad => new SteamSchema.PackageIDsTable(ad)).ToHashSet();
+                        var allDLCIDs = allDLC.Select(ad => new SteamSchema.AppIDsTable() {appID=ad.dlcID }).ToHashSet();
 
+                        await context.BulkMergeAsync(allAppIDs, options => {
+                            options.IncludeGraph = false;
+                            options.IgnoreOnUpdateExpression = x => x.lastScanned;
+                        });
+                        await context.BulkMergeAsync(allDLCIDs, options =>{
+                            options.IncludeGraph = false;
+                            options.IgnoreOnUpdateExpression = x => x.lastScanned;
+                            });
 
+                        // await context.BulkUpdateAsync(appDetails.Select(ad=>ad.AppIDNavigation).ToHashSet(), options => options.IncludeGraph = false);
                         await context.BulkMergeAsync(appDetails, options => options.IncludeGraph = false);
 
-                        await context.BulkSynchronizeAsync(allDevs, options => {
+                        await context.BulkMergeAsync(allDevs, options => options.IncludeGraph = false);
+
+                        await context.BulkSynchronizeAsync(allDevs, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnPrimaryKeyExpression = x => new
                             {
@@ -156,7 +169,8 @@ namespace GameMarketAPIServer.Services
                             };
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
                         });
-                        await context.BulkSynchronizeAsync(allPubs, options => {
+                        await context.BulkSynchronizeAsync(allPubs, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnPrimaryKeyExpression = x => new
                             {
@@ -165,7 +179,8 @@ namespace GameMarketAPIServer.Services
                             };
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
                         });
-                        await context.BulkSynchronizeAsync(allDLC, options => {
+                        await context.BulkSynchronizeAsync(allDLC, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnPrimaryKeyExpression = x => new
                             {
@@ -174,7 +189,8 @@ namespace GameMarketAPIServer.Services
                             };
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.appID;
                         });
-                        await context.BulkSynchronizeAsync(allPlat, options => {
+                        await context.BulkSynchronizeAsync(allPlat, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnPrimaryKeyExpression = x => new
                             {
@@ -186,7 +202,8 @@ namespace GameMarketAPIServer.Services
 
                         await context.BulkMergeAsync(allPackageIDs, options => options.IncludeGraph = false);
 
-                        await context.BulkSynchronizeAsync(allPackeges, options => {
+                        await context.BulkSynchronizeAsync(allPackeges, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnPrimaryKeyExpression = x => new
                             {
@@ -199,7 +216,8 @@ namespace GameMarketAPIServer.Services
 
                     else if (castedTables is ICollection<GameMarketSchema.GameTitleTable> marketTitles)
                     {
-                        await context.BulkMergeAsync(marketTitles, options => {
+                        await context.BulkMergeAsync(marketTitles, options =>
+                        {
                             options.IncludeGraph = false;
                         });
                         var allDevs = marketTitles.SelectMany(mt => mt.Developers ?? Enumerable.Empty<GameMarketSchema.DeveloperTable>()).Where(g => g != null).ToHashSet();
@@ -209,19 +227,33 @@ namespace GameMarketAPIServer.Services
 
 
 
-                        await context.BulkSynchronizeAsync(allDevs, options => {
+                        await context.BulkSynchronizeAsync(allDevs, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.gameID,
+                                x.developer
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                        await context.BulkSynchronizeAsync(allPubs, options =>
+                        {
+                            options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.gameID,
+                                x.publisher
+                            };
+                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
+                        });
+                        await context.BulkSynchronizeAsync(xboxLinks, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
                         });
-                        await context.BulkSynchronizeAsync(allPubs, options => {
-                            options.IncludeGraph = false;
-                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
-                        });
-                        await context.BulkSynchronizeAsync(xboxLinks, options => {
-                            options.IncludeGraph = false;
-                            options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
-                        });
-                        await context.BulkSynchronizeAsync(steamLinks, options => {
+                        await context.BulkSynchronizeAsync(steamLinks, options =>
+                        {
                             options.IncludeGraph = false;
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
                         });
@@ -250,23 +282,6 @@ namespace GameMarketAPIServer.Services
                 logger.LogError(e.ToString());
                 return;
             }
-        }
-        public async Task AddUpdateTable(Models.ITable table)
-        {
-            try
-            {
-                if (table is DataBaseSchemas.XboxSchema.UserProfileTable userTable)
-                {
-                    context.Add(userTable);
-                    //context.Add(userTable);
-                }
-                await context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e.ToString());
-            }
-
         }
         public async Task AddTable(Models.ITable table)
         {
@@ -390,7 +405,7 @@ namespace GameMarketAPIServer.Services
         {
             try
             {
-                var appIDs = await context.steamAppIDs.Where(appID => appID.lastScanned == null || appID.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls => ls.lastScanned).ToListAsync();
+                var appIDs = await context.steamAppIDs.Where(appID => appID.lastScanned == null || appID.lastScanned < (refreshTime ?? DateTime.MinValue)).OrderBy(ls=>ls.lastScanned).ThenBy(ls=>ls.appID).ToListAsync();
                 return appIDs;
             }
             catch (Exception e)

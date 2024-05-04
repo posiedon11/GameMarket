@@ -1,0 +1,95 @@
+
+.Game-Container{
+
+}
+.Game-List {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+    gap: 20px; 
+    padding: 20px; 
+}
+
+.Game-Tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #333; 
+    color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    min-block-size: 300px;
+}
+
+    .Game-Tile img {
+        width: 100%; 
+        height: 150px; 
+        object-fit: cover; 
+    }
+
+.Game-Info {
+    padding: 10px;
+    text-align: center;
+}
+
+    .Game-Info h3 {
+        margin-top: 10px;
+        font-size: 18px; 
+    }
+
+    .Game-Info p {
+        margin: 5px 0;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+    }
+
+.Price {
+    font-weight: bold;
+    color: #4CAF50; 
+}
+.Price img{
+    width: 20px;
+    margin-right: 5px;
+    height: auto;
+    vertical-align: middle;
+}
+.Filter-Main {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "Platforms"
+        "Devices"
+        "Genres";
+    align-items: center;
+    padding: 20px;
+    background: #333;
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.Filter-Group{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 50px;
+}
+.Filter-Platform{
+    display: flex;
+    grid-area: Platforms;
+    flex-direction: row;
+    gap: 10px;
+}
+.Filter-Genre{
+    display: flex;
+    grid-area: Genres;
+    flex-direction: row;
+    gap: 10px;
+}
+.Filter-Device{
+    display: flex;
+    grid-area: Devices;
+    flex-direction: row;
+    gap: 10px;
+}

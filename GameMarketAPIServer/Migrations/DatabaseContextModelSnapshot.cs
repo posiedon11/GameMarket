@@ -24,24 +24,14 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+GameMarketSchema+DeveloperTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
-                    b.Property<string>("developer")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
                     b.Property<uint>("gameID")
                         .HasColumnType("int unsigned");
 
-                    b.HasKey("ID");
+                    b.Property<string>("developer")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
-                    b.HasIndex("gameID", "developer")
-                        .IsUnique();
+                    b.HasKey("gameID", "developer");
 
                     b.ToTable("GameMarket_Developer", (string)null);
                 });
@@ -56,8 +46,8 @@ namespace GameMarketAPIServer.Migrations
 
                     b.Property<string>("gameTitle")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.HasKey("gameID");
 
@@ -66,24 +56,14 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+GameMarketSchema+PublisherTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("gameID")
                         .HasColumnType("int unsigned");
 
                     b.Property<string>("publisher")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
-                    b.HasKey("ID");
-
-                    b.HasIndex("gameID", "publisher")
-                        .IsUnique();
+                    b.HasKey("gameID", "publisher");
 
                     b.ToTable("GameMarket_Publisher", (string)null);
                 });
@@ -123,25 +103,15 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppDLCTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<uint>("dlcID")
                         .HasColumnType("int unsigned");
 
-                    b.HasKey("ID");
+                    b.HasKey("appID", "dlcID");
 
-                    b.HasIndex("dlcID")
-                        .IsUnique();
-
-                    b.HasIndex("appID", "dlcID")
-                        .IsUnique();
+                    b.HasIndex("dlcID");
 
                     b.ToTable("Steam_AppDLC", (string)null);
                 });
@@ -153,13 +123,17 @@ namespace GameMarketAPIServer.Migrations
 
                     b.Property<string>("appName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.Property<string>("appType")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("imageURL")
+                        .HasMaxLength(600)
+                        .HasColumnType("varchar(600)");
 
                     b.Property<bool>("isFree")
                         .ValueGeneratedOnAdd()
@@ -169,7 +143,7 @@ namespace GameMarketAPIServer.Migrations
                     b.Property<DateTime>("lastScanned")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValue(new DateTime(2024, 4, 27, 7, 55, 54, 737, DateTimeKind.Utc).AddTicks(1515));
+                        .HasDefaultValue(new DateTime(2024, 5, 1, 6, 56, 22, 94, DateTimeKind.Utc).AddTicks(1097));
 
                     b.Property<double?>("listPrice")
                         .HasColumnType("double");
@@ -184,48 +158,28 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppDevelopersTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<string>("developer")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
-                    b.HasKey("ID");
-
-                    b.HasIndex("appID", "developer")
-                        .IsUnique();
+                    b.HasKey("appID", "developer");
 
                     b.ToTable("Steam_AppDevelopers", (string)null);
                 });
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppGenresTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<string>("genre")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
-                    b.HasKey("ID");
-
-                    b.HasIndex("appID", "genre")
-                        .IsUnique();
+                    b.HasKey("appID", "genre");
 
                     b.ToTable("Steam_AppGenres", (string)null);
                 });
@@ -245,48 +199,28 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppPlatformsTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<string>("platform")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
-                    b.HasKey("ID");
-
-                    b.HasIndex("appID", "platform")
-                        .IsUnique();
+                    b.HasKey("appID", "platform");
 
                     b.ToTable("Steam_AppPlatforms", (string)null);
                 });
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppPublishersTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<string>("publisher")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
-                    b.HasKey("ID");
-
-                    b.HasIndex("appID", "publisher")
-                        .IsUnique();
+                    b.HasKey("appID", "publisher");
 
                     b.ToTable("Steam_AppPublishers", (string)null);
                 });
@@ -299,7 +233,7 @@ namespace GameMarketAPIServer.Migrations
                     b.Property<DateTime>("lastScanned")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValue(new DateTime(2024, 4, 27, 7, 55, 54, 740, DateTimeKind.Utc).AddTicks(185));
+                        .HasDefaultValue(new DateTime(2024, 5, 1, 6, 56, 22, 97, DateTimeKind.Utc).AddTicks(5846));
 
                     b.Property<double>("listPrice")
                         .HasColumnType("double");
@@ -309,8 +243,8 @@ namespace GameMarketAPIServer.Migrations
 
                     b.Property<string>("packageName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.HasKey("packageID");
 
@@ -332,68 +266,47 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+PackagesTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
                     b.Property<uint>("appID")
                         .HasColumnType("int unsigned");
 
                     b.Property<uint>("packageID")
                         .HasColumnType("int unsigned");
 
-                    b.HasKey("ID");
+                    b.HasKey("appID", "packageID");
 
                     b.HasIndex("packageID");
-
-                    b.HasIndex("appID", "packageID")
-                        .IsUnique();
 
                     b.ToTable("Steam_Packages", (string)null);
                 });
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+XboxSchema+GameBundleTable", b =>
                 {
+                    b.Property<string>("productID")
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)");
+
                     b.Property<string>("relatedProductID")
                         .HasMaxLength(15)
                         .HasColumnType("varchar(15)");
 
-                    b.Property<string>("productID")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("varchar(15)");
+                    b.HasKey("productID", "relatedProductID");
 
-                    b.HasKey("relatedProductID");
-
-                    b.HasIndex("productID");
+                    b.HasIndex("relatedProductID");
 
                     b.ToTable("Xbox_GameBundle", (string)null);
                 });
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+XboxSchema+GameGenreTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
-                    b.Property<string>("genre")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
-
-                    b.Property<string>("titleID")
-                        .IsRequired()
+                    b.Property<string>("modernTitleID")
                         .HasMaxLength(15)
                         .HasColumnType("varchar(15)");
 
-                    b.HasKey("ID");
+                    b.Property<string>("genre")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
-                    b.HasIndex("titleID", "genre")
-                        .IsUnique();
+                    b.HasKey("modernTitleID", "genre");
 
                     b.ToTable("Xbox_GameGenre", (string)null);
                 });
@@ -425,8 +338,8 @@ namespace GameMarketAPIServer.Migrations
 
                     b.Property<string>("titleName")
                         .IsRequired()
-                        .HasMaxLength(130)
-                        .HasColumnType("varchar(130)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.HasKey("modernTitleID");
 
@@ -436,13 +349,13 @@ namespace GameMarketAPIServer.Migrations
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+XboxSchema+GroupDataTable", b =>
                 {
                     b.Property<string>("groupID")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.Property<string>("groupName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.HasKey("groupID");
 
@@ -460,9 +373,8 @@ namespace GameMarketAPIServer.Migrations
                         .HasColumnType("varchar(5)");
 
                     b.Property<string>("developerName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
                     b.Property<DateTime>("endDate")
                         .HasMaxLength(15)
@@ -475,18 +387,17 @@ namespace GameMarketAPIServer.Migrations
                         .HasColumnType("double");
 
                     b.Property<string>("posterImage")
-                        .HasMaxLength(350)
-                        .HasColumnType("varchar(350)");
+                        .HasMaxLength(600)
+                        .HasColumnType("varchar(600)");
 
                     b.Property<string>("productTitle")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("varchar(300)");
+                        .HasMaxLength(350)
+                        .HasColumnType("varchar(350)");
 
                     b.Property<string>("publisherName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
                     b.Property<bool>("purchasable")
                         .ValueGeneratedOnAdd()
@@ -521,26 +432,15 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+XboxSchema+ProductPlatformTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
-                    b.Property<string>("platform")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("varchar(40)");
-
                     b.Property<string>("productID")
-                        .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("varchar(15)");
 
-                    b.HasKey("ID");
+                    b.Property<string>("platform")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
-                    b.HasIndex("productID", "platform")
-                        .IsUnique();
+                    b.HasKey("productID", "platform");
 
                     b.ToTable("Xbox_ProductPlatform", (string)null);
                 });
@@ -565,26 +465,15 @@ namespace GameMarketAPIServer.Migrations
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+XboxSchema+TitleDeviceTable", b =>
                 {
-                    b.Property<uint>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("ID"));
-
-                    b.Property<string>("device")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
-
                     b.Property<string>("modernTitleID")
-                        .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("varchar(15)");
 
-                    b.HasKey("ID");
+                    b.Property<string>("device")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
-                    b.HasIndex("modernTitleID", "device")
-                        .IsUnique();
+                    b.HasKey("modernTitleID", "device");
 
                     b.ToTable("Xbox_TitleDevice", (string)null);
                 });
@@ -676,15 +565,15 @@ namespace GameMarketAPIServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppIDsTable", "AppIDs")
-                        .WithOne("AppDLC")
-                        .HasForeignKey("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppDLCTable", "dlcID")
+                    b.HasOne("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppIDsTable", "AppIDNavigation")
+                        .WithMany("AppDLC")
+                        .HasForeignKey("dlcID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AppDetails");
 
-                    b.Navigation("AppIDs");
+                    b.Navigation("AppIDNavigation");
                 });
 
             modelBuilder.Entity("GameMarketAPIServer.Models.DataBaseSchemas+SteamSchema+AppDetailsTable", b =>

@@ -20,6 +20,9 @@ namespace GameMarketAPIServer.Models.Contexts
         private readonly ILogger<DatabaseContext> logger;
         private readonly MainSettings settings;
         private UInt16 xboxIDMaxLength = 15;
+        private readonly UInt16 devPubmaxLength = 150;
+        private readonly UInt16 gameTitleMaxLength = 350;
+        private readonly UInt16 miscMaxLength = 80;
 
         #region Tables
         public DbSet<XboxSchema.GameTitleTable> xboxTitles { get; set; }
@@ -90,7 +93,7 @@ namespace GameMarketAPIServer.Models.Contexts
             {
                 //Properties
                 entity.Property(e => e.titleID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
-                entity.Property(e => e.titleName).IsRequired(true).HasMaxLength(130);
+                entity.Property(e => e.titleName).IsRequired(true).HasMaxLength(gameTitleMaxLength);
                 entity.Property(e => e.displayImage).IsRequired(false).HasMaxLength(600).HasDefaultValue(null);
                 entity.Property(e => e.modernTitleID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
                 entity.Property(e => e.groupID).IsRequired(false).HasMaxLength(xboxIDMaxLength).HasDefaultValue(null);
@@ -111,13 +114,12 @@ namespace GameMarketAPIServer.Models.Contexts
             modelBuilder.Entity<XboxSchema.TitleDeviceTable>(entity =>
             {
                 //Properties
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
+
                 entity.Property(e => e.modernTitleID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
                 entity.Property(e => e.device).IsRequired(true).HasMaxLength(30);
 
                 //Primary Key
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.modernTitleID, e.device }).IsUnique();
+                entity.HasKey(e => new { e.modernTitleID, e.device });
 
                 //Relationships
                 entity.HasOne(e => e.GameTitle).WithMany(e => e.TitleDevices).HasForeignKey(e => e.modernTitleID).IsRequired(true);
@@ -143,7 +145,7 @@ namespace GameMarketAPIServer.Models.Contexts
                 entity.Property(e => e.productID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
                 entity.Property(e => e.relatedProductID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
 
-                entity.HasKey(e => e.relatedProductID);
+                entity.HasKey(e => new { e.productID, e.relatedProductID });
 
                 entity.HasOne(e => e.TitleDetails).WithMany(e => e.GameBundles).HasForeignKey(e => e.productID).IsRequired(true);
                 entity.HasOne(e => e.ProductIDNavig).WithMany(e => e.GameBundles).HasForeignKey(e => e.relatedProductID).IsRequired(true);
@@ -165,12 +167,12 @@ namespace GameMarketAPIServer.Models.Contexts
             {
 
                 entity.Property(e => e.productID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
-                entity.Property(e => e.productTitle).IsRequired(true).HasMaxLength(300);
-                entity.Property(e => e.developerName).IsRequired(true).HasMaxLength(200);
-                entity.Property(e => e.publisherName).IsRequired(true).HasMaxLength(200);
+                entity.Property(e => e.productTitle).IsRequired(true).HasMaxLength(gameTitleMaxLength);
+                entity.Property(e => e.developerName).IsRequired(false).HasMaxLength(devPubmaxLength).HasDefaultValue(null);
+                entity.Property(e => e.publisherName).IsRequired(false).HasMaxLength(devPubmaxLength).HasDefaultValue(null);
                 entity.Property(e => e.currencyCode).IsRequired(false).HasMaxLength(5).HasDefaultValue(null);
                 entity.Property(e => e.purchasable).IsRequired(true).HasDefaultValue(true);
-                entity.Property(e => e.posterImage).IsRequired(false).HasMaxLength(350).HasDefaultValue(null);
+                entity.Property(e => e.posterImage).IsRequired(false).HasMaxLength(600).HasDefaultValue(null);
                 entity.Property(e => e.msrp).IsRequired(false).HasDefaultValue(null);
                 entity.Property(e => e.listPrice).IsRequired(false).HasDefaultValue(null);
 
@@ -199,12 +201,11 @@ namespace GameMarketAPIServer.Models.Contexts
 
             modelBuilder.Entity<XboxSchema.ProductPlatformTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.productID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
-                entity.Property(e => e.platform).IsRequired(true).HasMaxLength(40);
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.productID, e.platform }).IsUnique();
+                entity.Property(e => e.productID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
+                entity.Property(e => e.platform).IsRequired(true).HasMaxLength(miscMaxLength);
+
+                entity.HasKey(e => new { e.productID, e.platform });
 
 
                 entity.HasOne(e => e.MarketDetail).WithMany(e => e.ProductPlatforms).IsRequired(true).HasForeignKey(e => e.productID);
@@ -215,8 +216,8 @@ namespace GameMarketAPIServer.Models.Contexts
 
             modelBuilder.Entity<XboxSchema.GroupDataTable>(entity =>
             {
-                entity.Property(e => e.groupID).IsRequired(true).HasMaxLength(50);
-                entity.Property(e => e.groupName).IsRequired(true).HasMaxLength(150);
+                entity.Property(e => e.groupID).IsRequired(true).HasMaxLength(miscMaxLength);
+                entity.Property(e => e.groupName).IsRequired(true).HasMaxLength(gameTitleMaxLength);
                 entity.HasKey(entity => entity.groupID);
 
             });
@@ -234,11 +235,11 @@ namespace GameMarketAPIServer.Models.Contexts
 
             modelBuilder.Entity<XboxSchema.GameGenreTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.titleID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
-                entity.Property(e => e.genre).IsRequired(true).HasMaxLength(30);
 
-                entity.HasIndex(e => new { e.titleID, e.genre }).IsUnique();
+                entity.Property(e => e.modernTitleID).IsRequired(true).HasMaxLength(xboxIDMaxLength);
+                entity.Property(e => e.genre).IsRequired(true).HasMaxLength(miscMaxLength);
+
+                entity.HasKey(e => new { e.modernTitleID, e.genre });
 
                 //entity.HasOne(e => e.).WithMany(e => e.Genres).IsRequired(true).HasForeignKey(e => e);
 
@@ -262,13 +263,13 @@ namespace GameMarketAPIServer.Models.Contexts
             modelBuilder.Entity<SteamSchema.AppDetailsTable>(entity =>
             {
                 entity.Property(e => e.appID).IsRequired();
-                entity.Property(e => e.appType).IsRequired(true).HasMaxLength(30);
-                entity.Property(e => e.appName).IsRequired(true).HasMaxLength(200);
+                entity.Property(e => e.appType).IsRequired(true).HasMaxLength(miscMaxLength);
+                entity.Property(e => e.appName).IsRequired(true).HasMaxLength(gameTitleMaxLength);
                 entity.Property(e => e.msrp).IsRequired(false).HasDefaultValue(null);
                 entity.Property(e => e.listPrice).IsRequired(false).HasDefaultValue(null);
                 entity.Property(e => e.isFree).IsRequired(true).HasDefaultValue(false);
                 entity.Property(e => e.lastScanned).IsRequired(true).HasDefaultValue(DateTime.UtcNow);
-
+                entity.Property(e=>e.imageURL).IsRequired(false).HasMaxLength(600).HasDefaultValue(null);
 
                 entity.HasKey(e => e.appID);
 
@@ -290,24 +291,22 @@ namespace GameMarketAPIServer.Models.Contexts
 
             modelBuilder.Entity<SteamSchema.AppDevelopersTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.appID).IsRequired(true);
-                entity.Property(e => e.developer).IsRequired(true).HasMaxLength(30);
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.appID, e.developer }).IsUnique();
+                entity.Property(e => e.appID).IsRequired(true);
+                entity.Property(e => e.developer).IsRequired(true).HasMaxLength(devPubmaxLength);
+
+                entity.HasKey(e => new { e.appID, e.developer });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.Developers).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
             });
 
             modelBuilder.Entity<SteamSchema.AppPublishersTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.appID).IsRequired(true);
-                entity.Property(e => e.publisher).IsRequired(true).HasMaxLength(30);
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.appID, e.publisher }).IsUnique();
+                entity.Property(e => e.appID).IsRequired(true);
+                entity.Property(e => e.publisher).IsRequired(true).HasMaxLength(devPubmaxLength);
+
+                entity.HasKey(e => new { e.appID, e.publisher });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.Publishers).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
             });
@@ -315,37 +314,35 @@ namespace GameMarketAPIServer.Models.Contexts
             modelBuilder.Entity<SteamSchema.AppGenresTable>(entity =>
             {
                 entity.Property(e => e.appID).IsRequired(true);
-                entity.Property(e => e.genre).IsRequired(true).HasMaxLength(30);
+                entity.Property(e => e.genre).IsRequired(true).HasMaxLength(miscMaxLength);
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.appID, e.genre }).IsUnique();
+                entity.HasKey(e => new { e.appID, e.genre });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.Genres).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
             });
 
             modelBuilder.Entity<SteamSchema.AppPlatformsTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.appID).IsRequired(true);
-                entity.Property(e => e.platform).IsRequired(true).HasMaxLength(30);
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.appID, e.platform }).IsUnique();
+                entity.Property(e => e.appID).IsRequired(true);
+                entity.Property(e => e.platform).IsRequired(true).HasMaxLength(miscMaxLength);
+
+                entity.HasKey(e => new { e.appID, e.platform });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.Platforms).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
             });
 
             modelBuilder.Entity<SteamSchema.AppDLCTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
+
                 entity.Property(e => e.appID).IsRequired(true);
                 entity.Property(e => e.dlcID).IsRequired(true);
-                entity.HasKey(e => e.ID);
 
-                entity.HasIndex(e => new { e.appID, e.dlcID }).IsUnique();
+
+                entity.HasKey(e => new { e.appID, e.dlcID });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.DLCs).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
-                entity.HasOne(e => e.AppIDs).WithOne(e => e.AppDLC).HasForeignKey<SteamSchema.AppDLCTable>(e => e.dlcID).HasPrincipalKey<SteamSchema.AppIDsTable>(e => e.appID).IsRequired(true);
+                entity.HasOne(e => e.AppIDNavigation).WithMany(e => e.AppDLC).HasForeignKey(e => e.dlcID).HasPrincipalKey(e => e.appID).IsRequired(true);
             });
 
             modelBuilder.Entity<SteamSchema.PackagesTable>(entity =>
@@ -354,8 +351,8 @@ namespace GameMarketAPIServer.Models.Contexts
                 entity.Property(e => e.appID).IsRequired(true).ValueGeneratedNever();
                 entity.Property(e => e.packageID).IsRequired(true).ValueGeneratedNever();
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.appID, e.packageID }).IsUnique();
+                
+                entity.HasKey(e => new { e.appID, e.packageID });
 
                 entity.HasOne(e => e.AppDetails).WithMany(e => e.Packeges).HasForeignKey(e => e.appID).HasPrincipalKey(e => e.appID).IsRequired(true);
                 entity.HasOne(e => e.PackageIDs).WithMany(e => e.Packages).HasForeignKey(e => e.packageID).HasPrincipalKey(e => e.packageID).IsRequired(true);
@@ -375,7 +372,7 @@ namespace GameMarketAPIServer.Models.Contexts
             modelBuilder.Entity<SteamSchema.PackageDetailsTable>(entity =>
             {
                 entity.Property(e => e.packageID).IsRequired(true).ValueGeneratedNever();
-                entity.Property(e => e.packageName).IsRequired(true).HasMaxLength(200);
+                entity.Property(e => e.packageName).IsRequired(true).HasMaxLength(gameTitleMaxLength);
                 entity.Property(e => e.msrp).IsRequired(true);
                 entity.Property(e => e.listPrice).IsRequired(true);
                 entity.Property(e => e.lastScanned).IsRequired(true).HasDefaultValue(DateTime.UtcNow);
@@ -392,7 +389,7 @@ namespace GameMarketAPIServer.Models.Contexts
             modelBuilder.Entity<GameMarketSchema.GameTitleTable>(entity =>
             {
                 entity.Property(e => e.gameID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.gameTitle).IsRequired(true).HasMaxLength(200);
+                entity.Property(e => e.gameTitle).IsRequired(true).HasMaxLength(gameTitleMaxLength);
 
                 entity.HasKey(e => e.gameID);
 
@@ -404,24 +401,22 @@ namespace GameMarketAPIServer.Models.Contexts
 
             modelBuilder.Entity<GameMarketSchema.DeveloperTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.developer).IsRequired(true).HasMaxLength(200);
+
+                entity.Property(e => e.developer).IsRequired(true).HasMaxLength(devPubmaxLength);
                 entity.Property(e => e.gameID).IsRequired(true).ValueGeneratedNever();
 
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.gameID, e.developer }).IsUnique();
+
+                entity.HasKey(e => new { e.gameID, e.developer });
 
                 entity.HasOne(e => e.GameTitle).WithMany(e => e.Developers).HasForeignKey(e => e.gameID).HasPrincipalKey(e => e.gameID).IsRequired(true);
             });
 
             modelBuilder.Entity<GameMarketSchema.PublisherTable>(entity =>
             {
-                entity.Property(e => e.ID).IsRequired(true).ValueGeneratedOnAdd();
-                entity.Property(e => e.publisher).IsRequired(true).HasMaxLength(200);
+                entity.Property(e => e.publisher).IsRequired(true).HasMaxLength(devPubmaxLength);
                 entity.Property(e => e.gameID).IsRequired(true).ValueGeneratedNever();
-
-                entity.HasKey(e => e.ID);
-                entity.HasIndex(e => new { e.gameID, e.publisher }).IsUnique();
+                
+                entity.HasKey(e => new { e.gameID, e.publisher }    );
 
                 entity.HasOne(e => e.GameTitle).WithMany(e => e.Publishers).HasForeignKey(e => e.gameID).HasPrincipalKey(e => e.gameID).IsRequired(true);
             });
@@ -436,7 +431,6 @@ namespace GameMarketAPIServer.Models.Contexts
                 entity.HasKey(e => e.modernTitleID);
 
                 entity.HasOne(e => e.GameTitle).WithMany(e => e.XboxLinks).HasForeignKey(e => e.gameID).IsRequired(true);
-
 
                 entity.HasOne(e => e.XboxTitle).WithOne(e => e.GameMarketLink)
                 .HasForeignKey<GameMarketSchema.XboxLinkTable>(e => e.modernTitleID)

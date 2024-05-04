@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using GameMarketAPIServer.Services;
+using System.Text.RegularExpressions;
 using static GameMarketAPIServer.Models.DataBaseSchemas;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace GameMarketAPIServer.Models
@@ -151,12 +152,23 @@ namespace GameMarketAPIServer.Models
 
             table.isFree = appData.is_free;
 
+
             if (!table.isFree)
             {
                 table.msrp = appData.price_overview.initial;
                 table.listPrice = appData.price_overview.final;
             }
 
+            if (appData.header_image != null)
+                table.imageURL = appData.header_image;
+            else if (appData.capsule_image != null)
+            {
+                table.imageURL = appData.capsule_image;
+            }
+            else if (appData.capsule_imagev5 != null)
+            {
+                table.imageURL = appData.capsule_imagev5;
+            }
             //add genres
             if (appData.genres != null && appData.genres.Any())
             {
@@ -171,6 +183,7 @@ namespace GameMarketAPIServer.Models
                 foreach (var dlc in appData.dlc.ToHashSet())
                 {
                     if (dlc == 0) continue;
+
                     table.DLCs.Add(new SteamSchema.AppDLCTable(table.appID, dlc) { AppDetails = table });
                 }
             }
@@ -251,6 +264,193 @@ namespace GameMarketAPIServer.Models
                 }
             }
             return table;
+        }
+
+
+        public static ICollection<XboxPriceDTO> MaptToXboxPriceDTO(List<XboxSchema.MarketDetailTable> marketDetails)
+        {
+            ICollection<XboxPriceDTO> xboxPrices = new List<XboxPriceDTO>();
+            try
+            {
+                foreach (var deatil in marketDetails)
+                {
+                    var xboxPrice = new XboxPriceDTO();
+                    xboxPrice.ProductID = deatil.productID;
+                    xboxPrice.imageURI = deatil.posterImage;
+                    xboxPrice.Purchasable = deatil.purchasable;
+                    if (deatil.purchasable)
+                    {
+                        xboxPrice.ListPrice = deatil.listPrice ?? 0;
+                        xboxPrice.MSRP = deatil.msrp ?? 0;
+                        xboxPrice.CurrencyCode = deatil.currencyCode ?? "FREE";
+                    }
+
+                    //get game platforms
+                    if (deatil.ProductPlatforms != null && deatil.ProductPlatforms.Any())
+                        xboxPrice.Platforms = deatil.ProductPlatforms.Select(p => p.platform.Replace("Windows.", "")).ToList();
+
+                    xboxPrices.Add(xboxPrice);
+                }
+
+
+                return xboxPrices;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                xboxPrices.Clear();
+                return xboxPrices;
+            }
+        }
+
+
+        public static ICollection<SteamPriceDTO> MapToSteamPriceDTO(List<SteamSchema.AppDetailsTable> appDetails)
+        {
+            ICollection<SteamPriceDTO> steamPrices = new List<SteamPriceDTO>();
+            try
+            {
+                foreach (var detail in appDetails)
+                {
+                    var steamPrice = new SteamPriceDTO();
+                    steamPrice.AppID = detail.appID;
+                    steamPrice.isFree = detail.isFree;
+                    steamPrice.imageURI = detail.imageURL;
+                    if (steamPrice.isFree)
+                    {
+                        steamPrice.ListPrice = 0;
+                        steamPrice.MSRP = 0;
+                    }
+                    else
+                    {
+                        steamPrice.ListPrice = detail.listPrice / 100 ?? 0;
+                        steamPrice.MSRP = detail.msrp / 100 ?? 0;
+                    }
+
+                    if (detail.Platforms != null && detail.Platforms.Any())
+                    {
+                        steamPrice.Platforms = detail.Platforms.Select(p => p.platform).ToList();
+                    }
+
+                    steamPrices.Add(steamPrice);
+                }
+
+                return steamPrices;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                steamPrices.Clear();
+                return steamPrices;
+            }
+        }
+
+
+        public static ICollection<XboxDetailsDTO> MapToXboxDetailDTO(List<XboxSchema.TitleDetailTable> titleDetails)
+        {
+            ICollection<XboxDetailsDTO> xboxDetails = new List<XboxDetailsDTO>();
+            try
+            {
+                foreach (var detail in titleDetails)
+                {
+                    var xboxDetail = new XboxDetailsDTO();
+                    XboxSchema.MarketDetailTable? marketDetail = detail.ProductIDNavig.MarketDetails;
+                    if (marketDetail == null)
+                    {
+                        continue;
+                    }
+
+                    if (marketDetail.purchasable)
+                    {
+                        xboxDetail.PriceDetails = new XboxPriceDTO()
+                        {
+                            imageURI = marketDetail.posterImage,
+                            ListPrice = marketDetail.listPrice ?? 0,
+                            MSRP = marketDetail.msrp ?? 0,
+                            CurrencyCode = marketDetail.currencyCode ?? "FREE",
+                            ProductID = marketDetail.productID
+
+                        };
+                    }
+                    else
+                    {
+                        xboxDetail.PriceDetails = new XboxPriceDTO()
+                        {
+                            imageURI = marketDetail.posterImage,
+                            CurrencyCode = "BAD"
+                        };
+                    }
+
+                    //get game bundls;
+                    if (detail.GameBundles != null && detail.GameBundles.Any())
+                        xboxDetail.Bundles = detail.GameBundles.Select(g => g.relatedProductID).ToList();
+                    else xboxDetail.Bundles = new List<string>();
+
+                    
+                    //get the store page url
+                    if (xboxDetail.PriceDetails.Platforms.Contains("Mobile"))
+                    {
+                        xboxDetail.storeURL = $"https://apps.microsoft.com/detail/{detail.productID}?hl=en-us&gl=U";
+                    }
+                    else
+                    {
+                        xboxDetail.storeURL = $"https://www.xbox.com/en-US/games/store/{Regex.Replace(marketDetail.productTitle, " ", "-")}/{detail.productID}";
+                    }
+                    xboxDetails.Add(xboxDetail);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                xboxDetails.Clear();
+            }
+            return xboxDetails;
+        }
+
+        public static ICollection<SteamDetailsDTO> MapToSteamDetailDTO(List<SteamSchema.AppDetailsTable> appDetails)
+        {
+            ICollection<SteamDetailsDTO> steamDetails = new List<SteamDetailsDTO>();
+            try
+            {
+                foreach (var detail in appDetails)
+                {
+                    SteamDetailsDTO steamDetail = new SteamDetailsDTO();
+
+                    var steamPrice = new SteamPriceDTO();
+                    steamPrice.AppID = detail.appID;
+                    steamPrice.isFree = detail.isFree;
+                    steamPrice.imageURI = detail.imageURL;
+                    if (steamPrice.isFree)
+                    {
+                        steamPrice.ListPrice = 0;
+                        steamPrice.MSRP = 0;
+                    }
+                    else
+                    {
+                        steamPrice.ListPrice = detail.listPrice / 100 ?? 0;
+                        steamPrice.MSRP = detail.msrp / 100 ?? 0;
+                    }
+                    steamDetail.PriceDetails = steamPrice;
+
+
+                    if (detail.Packeges != null && detail.Packeges.Any())
+                    {
+                        steamDetail.packeges = detail.Packeges.Select(p => p.packageID).ToList();
+                    }
+                    else
+                    {
+                        steamDetail.packeges = new List<UInt32>();
+                    }
+                    steamDetail.storeURL = $"https://store.steampowered.com/app/{detail.appID}";
+                    steamDetails.Add(steamDetail);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                steamDetails.Clear();
+            }
+            return steamDetails;
+
         }
     }
 }

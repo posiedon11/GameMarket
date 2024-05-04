@@ -1,6 +1,7 @@
 ﻿using GameMarketAPIServer.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
+using static GameMarketAPIServer.Models.DataBaseSchemas;
 
 namespace GameMarketAPIServer.Models
 {
@@ -600,6 +601,10 @@ namespace GameMarketAPIServer.Models
 
         public SteamFullGame fullgame { get; set; }
 
+        public string header_image { get; set; }
+        public string capsule_image { get; set; }
+        public string capsule_imagev5 { get; set; }
+
         public HashSet<string> developers { get; set; }
         public HashSet<string> publishers { get; set; }
 
@@ -648,6 +653,8 @@ namespace GameMarketAPIServer.Models
     }
     #endregion
 
+
+
     public class GameMarketTitledata
     {
         Int32 gameID { get; set; }
@@ -667,6 +674,78 @@ namespace GameMarketAPIServer.Models
         {
             throw new NotImplementedException();
         }
+    }
+
+
+    public class GameMarketDTO
+    {
+        public string GameTitle { get; set; }
+        public UInt32 GameID { get; set; }
+        public List<string> Developers { get; set; }
+        public List<string> Publishers { get; set; }
+        public ICollection<XboxSchema.MarketDetailTable> XboxMarketDetails { get; set; }
+
+        public ICollection<SteamSchema.AppDetailsTable> SteamAppDetails { get; set; }
+    }
+
+    public class GameMarketTitleDTO
+    {
+        public string GameTitle { get; set; }
+        public UInt32 GameID { get; set; }
+        public List<string> Developers { get; set; }
+        public List<string> Publishers { get; set; }
+        public ICollection<XboxDetailsDTO> XboxDetails { get; set; }
+
+        public ICollection<SteamDetailsDTO> SteamDetails { get; set; }
+    }
+
+    public class GameMarketListDTO
+    {
+        public string GameTitle { get; set; }
+        public UInt32 GameID { get; set; }
+        public ICollection<XboxPriceDTO> XboxPriceDetails { get; set;}
+        public ICollection<SteamPriceDTO> SteamPriceDetails { get; set; }
+
+    }
+    public class XboxPriceDTO
+    {
+        public string ProductID { get; set; }
+        public string CurrencyCode { get; set; }
+        public double? ListPrice { get; set; }
+        public double? MSRP { get; set; }
+
+        public string? imageURI { get; set; }
+        public bool Purchasable { get; set; }
+
+        public ICollection<string> Platforms { get; set; } = new List<string>();
+
+    }
+
+    public class SteamPriceDTO
+    {
+        public UInt32 AppID { get; set; }
+        public double? MSRP { get; set; }
+        public double? ListPrice { get; set; }
+        public string? imageURI { get; set; }
+        public bool isFree { get; set; }
+
+        public ICollection<string> Platforms { get; set; } = new List<string>();
+
+    }
+
+
+    public class XboxDetailsDTO
+    {
+        public string storeURL { get; set; }
+        public XboxPriceDTO PriceDetails { get; set; }
+        public ICollection<string> Bundles { get; set; }
+    }
+
+    public class SteamDetailsDTO
+    {
+        public string storeURL { get; set; }
+        public SteamPriceDTO PriceDetails { get; set; }
+        public ICollection<UInt32> packeges { get; set; }
     }
 
 }

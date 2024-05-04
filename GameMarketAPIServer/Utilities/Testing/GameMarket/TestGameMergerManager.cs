@@ -137,20 +137,20 @@ namespace GameMarketAPIServer.Utilities.Testing.GameMarket
             //await mergerManager.mergeToGameMarket(DataBaseManager.Schemas.xbox, temp);
             await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox, temp);
         }
-        [Fact]
-        public async void TestNewGameMarketMerger()
-        {
-            List<string> testing = new List<string>() { "1677025209", "1981403899", "2008811924", "2132785815" };
-            var temp = new SortedDictionary<string, GamePlatformTitle>();
+        //[Fact]
+        //public async void TestNewGameMarketMerger()
+        //{
+        //    List<string> testing = new List<string>() { "1677025209", "1981403899", "2008811924", "2132785815" };
+        //    var temp = new SortedDictionary<string, GamePlatformTitle>();
 
-            foreach (var item in xboxNormalizeTest.Keys)
-            {
-                //if (item.Item1 == "1981403899" || item.Item1 == "1677025209")
-                //if(testing.Contains(item.Item1))
-                temp.Add(item.Item1, item.Item2);
-            }
-            await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox, temp);
-        }
+        //    foreach (var item in xboxNormalizeTest.Keys)
+        //    {
+        //        //if (item.Item1 == "1981403899" || item.Item1 == "1677025209")
+        //        //if(testing.Contains(item.Item1))
+        //        temp.Add(item.Item1, item.Item2);
+        //    }
+        //    await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
+        //}
         [Fact]
         public async void TestXboxMerger()
         {
@@ -188,7 +188,20 @@ namespace GameMarketAPIServer.Utilities.Testing.GameMarket
             //await mergerManager.MergeXboxGamesAsync(null);
         }
 
+
+        [Fact]
+        public async void TestSteamMerge()
+        {
+            var me = await mergerManager.MergeSteamGamesAsync(null);
+        }
+        [Fact]
         public async void TestNewGameMarketMerge()
+        {
+            await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
+            await mergerManager.mergeToGameMarket(DataBaseSchemas.Steam);
+        }
+        [Fact]
+        public async void TestNewGameMarketMergeXbox()
         {
             var temp = new SortedDictionary<string, GamePlatformTitle>();
 
@@ -203,6 +216,21 @@ namespace GameMarketAPIServer.Utilities.Testing.GameMarket
             await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox, temp);
         }
 
+        [Fact]
+        public async void TestNewGameMarketMergeSteam()
+        {
+            var temp = new SortedDictionary<string, GamePlatformTitle>();
+
+            foreach (var item in xboxNormalizeTest.Keys)
+            {
+                //if (item.Item1 == "1981403899" || item.Item1 == "1677025209")
+                //if(testing.Contains(item.Item1))
+                temp.Add(item.Item1, item.Item2);
+            }
+            //var me = await mergerManager.MergeXboxGamesAsync(temp);
+            //await mergerManager.mergeToGameMarket(DataBaseManager.Schemas.xbox, temp);
+            await mergerManager.mergeToGameMarket(DataBaseSchemas.Steam);
+        }
 
         [Fact]
         public void TestTitleNormalize()

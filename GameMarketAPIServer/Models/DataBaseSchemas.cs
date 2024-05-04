@@ -57,9 +57,9 @@ namespace GameMarketAPIServer.Models
             public class GameGenreTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
-                public string titleID { get; set; }
+                public object GetKey() => new { modernTitleID, genre };
+
+                public string modernTitleID { get; set; }
                 public string genre { get; set; }
                 public GameGenreTable() { }
             }
@@ -78,8 +78,8 @@ namespace GameMarketAPIServer.Models
                 public object GetKey() => productID;
                 public string productID { get; set; }
                 public string productTitle { get; set; }
-                public string developerName { get; set; }
-                public string publisherName { get; set; }
+                public string? developerName { get; set; }
+                public string? publisherName { get; set; }
                 public string? currencyCode { get; set; }
                 public bool purchasable { get; set; }
                 public string? posterImage { get; set; }
@@ -115,12 +115,11 @@ namespace GameMarketAPIServer.Models
                 }
 
             }
-
             public class ProductPlatformTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { productID, platform };
+
                 public string productID { get; set; }
                 public string platform { get; set; }
 
@@ -150,8 +149,8 @@ namespace GameMarketAPIServer.Models
             public class TitleDeviceTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { modernTitleID, device };
+
                 public string modernTitleID { get; set; }
                 public string device { get; set; }
 
@@ -168,7 +167,8 @@ namespace GameMarketAPIServer.Models
             public class GameBundleTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => relatedProductID;
+                public object GetKey() => new { productID, relatedProductID };
+
 
                 public string relatedProductID { get; set; }
 
@@ -219,6 +219,7 @@ namespace GameMarketAPIServer.Models
                 public UInt32 appID { get; set; }
                 public string appType { get; set; }
                 public string appName { get; set; }
+                public string?  imageURL { get; set; }
                 public double? msrp { get; set; }
                 public double? listPrice { get; set; }
                 public bool isFree { get; set; }
@@ -252,9 +253,9 @@ namespace GameMarketAPIServer.Models
             public class AppDevelopersTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
+                public object GetKey() => new {appID, developer};
 
-                public UInt32 ID { get; set; }
+
                 public UInt32 appID { get; set; }
                 public string developer { get; set; }
                 public virtual AppDetailsTable AppDetails { get; set; }
@@ -270,9 +271,9 @@ namespace GameMarketAPIServer.Models
             public class AppGenresTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
+                public object GetKey() => new { appID, genre };
 
-                public UInt32 ID { get; set; }
+
                 public UInt32 appID { get; set; }
                 public string genre { get; set; }
                 public virtual AppDetailsTable AppDetails { get; set; }
@@ -294,7 +295,7 @@ namespace GameMarketAPIServer.Models
                 public DateTime? lastScanned { get; set; }
 
                 public virtual AppDetailsTable? AppDetails { get; set; }
-                public virtual AppDLCTable? AppDLC { get; set; }
+                public virtual ICollection<AppDLCTable>? AppDLC { get; set; } = new List<AppDLCTable>();
 
                 public AppIDsTable() { }
                 public AppIDsTable(UInt32 _appID, DateTime _lastScanned)
@@ -308,8 +309,8 @@ namespace GameMarketAPIServer.Models
             public class AppPlatformsTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { appID, platform };
+
                 public UInt32 appID { get; set; }
                 public string platform { get; set; }
 
@@ -328,8 +329,8 @@ namespace GameMarketAPIServer.Models
             public class AppPublishersTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { appID, publisher };
+
                 public UInt32 appID { get; set; }
                 public string publisher { get; set; }
                 public virtual AppDetailsTable AppDetails { get; set; }
@@ -346,12 +347,12 @@ namespace GameMarketAPIServer.Models
             public class AppDLCTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { appID, dlcID };
+
                 public UInt32 appID { get; set; }
                 public UInt32 dlcID { get; set; }
                 public virtual AppDetailsTable AppDetails { get; set; }
-                public virtual AppIDsTable AppIDs { get; set; }
+                public virtual AppIDsTable AppIDNavigation { get; set; }
                 public AppDLCTable() { }
                 public AppDLCTable(UInt32 _appID, UInt32 _dlcID)
                 {
@@ -401,9 +402,9 @@ namespace GameMarketAPIServer.Models
             public class PackagesTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
+                public object GetKey() => new { appID, packageID };
 
-                public UInt32 ID { get; set; }
+
                 public UInt32 appID { get; set; }
                 public UInt32 packageID { get; set; }
                 public virtual PackageIDsTable PackageIDs { get; set; }
@@ -430,8 +431,8 @@ namespace GameMarketAPIServer.Models
             public class DeveloperTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { gameID, developer };
+
                 public UInt32 gameID { get; set; }
                 public string developer { get; set; }
                 public virtual GameTitleTable GameTitle { get; set; }
@@ -464,8 +465,8 @@ namespace GameMarketAPIServer.Models
             public class PublisherTable : ITable
             {
                 public ISchema GetSchema() => Instance;
-                public object GetKey() => ID;
-                public UInt32 ID { get; set; }
+                public object GetKey() => new { gameID, publisher };
+
                 public UInt32 gameID { get; set; }
                 public string publisher { get; set; }
                 public virtual GameTitleTable GameTitle { get; set; }

@@ -29,6 +29,11 @@ namespace GameMarketAPIServer.Utilities.Testing.Steam
             await TestAppDetail(292030);
         }
         [Fact]
+        public async void TestKillingFloor()
+        {
+            await TestAppDetail(1250);
+        }
+        [Fact]
         public async void TestNomadica()
         {
             await TestAppDetail(2835380);
@@ -37,6 +42,16 @@ namespace GameMarketAPIServer.Utilities.Testing.Steam
         public async void TestBorderlands3()
         {
             await TestAppDetail(397540);
+        }
+        [Fact]
+        public async void TestCS2()
+        {
+            await TestAppDetail(730);
+        }
+        [Fact]
+        public async void TestEVEOnline()
+        {
+            await TestAppDetail(8500);
         }
 
         private async Task TestAppDetail(UInt32 appID)

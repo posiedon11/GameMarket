@@ -62,8 +62,8 @@ namespace GameMarketAPIServer.Services
             searchPlayer
         }
 
-        public XblAPIManager( IOptions<MainSettings> settings, XblAPITracker apiTracker,
-            ILogger<XblAPIManager> logger, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory, IMapper mapper) : base( settings, logger, DataBaseSchemas.Xbox, httpClientFactory)
+        public XblAPIManager(IOptions<MainSettings> settings, XblAPITracker apiTracker,
+            ILogger<XblAPIManager> logger, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory, IMapper mapper) : base(settings, logger, DataBaseSchemas.Xbox, httpClientFactory)
         {
             this.xboxSettings = settings.Value.xboxSettings;
             this.apiTracker = apiTracker;
@@ -76,6 +76,8 @@ namespace GameMarketAPIServer.Services
 
 
         }
+
+
 
 
         //custom funcitons
@@ -98,13 +100,15 @@ namespace GameMarketAPIServer.Services
                 while (running && !mainCTS.Token.IsCancellationRequested)
                 {
                     apiTracker.repartitionHourlyRequests();
-                    await scanAllPlayerHistories();
-
-                    await scanAllGameTitles(20);
-
                     apiTracker.outputRemainingRequests();
 
-                    await scanAllProductIds(20);
+
+                    await scanAllPlayerHistories();
+
+                    await scanAllGameTitles();
+
+
+                    await scanAllProductIds();
 
 
                     //Sleep Loop
@@ -137,626 +141,6 @@ namespace GameMarketAPIServer.Services
         {
             throw new NotImplementedException();
         }
-
-
-
-
-
-
-
-#if false
-        #region Old Stuff
-        public async override Task<(bool, List<ITableData>)> ParseJsonAsyncOld(int apiCall, string json)
-        {
-
-            switch ((APICalls)apiCall)
-            {
-                case APICalls.newGames:
-                case APICalls.topGames:
-                case APICalls.bestGames:
-                case APICalls.comingSoonGames:
-                case APICalls.freeGames:
-                case APICalls.deals:
-                case APICalls.mostPlayedGames:
-                    return await parseGenericAsyncOld(json);
-                case APICalls.marketDetails:
-                    return await parseMarketDetailsAsyncOld(json);
-                    break;
-                case APICalls.gameTitle:
-                    return await parseGameTitleAsyncOld(json);
-                case APICalls.playerTitleHistory:
-                    return await parsePlayerHistoryAsyncOld(json);
-                case APICalls.searchPlayer:
-
-                case APICalls.checkAPILimit:
-                    //return parsePlayerAccout(document, operation);
-                    break;
-            }
-            return (false, new List<ITableData>());
-        }
-        private async Task<(bool, List<ITableData>)> parseGenericAsyncOld(string json)
-        {
-            try
-            {
-                GenericData genericData = JsonConvert.DeserializeObject<GenericData>(json);
-                if (genericData == null) { return (false, new List<ITableData>()); }
-
-                foreach (var item in genericData.items)
-                {
-                    item.output();
-                }
-                return (false, new List<ITableData>());
-            }
-            catch (Exception ex) { logger.LogDebug(ex.ToString()); return (false, new List<ITableData>()); }
-        }
-        private async Task<(bool, List<ITableData>)> parseGameTitleAsyncOld(string json)
-        {
-            try
-            {
-                var mapper = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>()).CreateMapper();
-
-                XboxMarketDetails details = JsonConvert.DeserializeObject<XboxMarketDetails>(json);
-                List<ITableData> returnList = new List<ITableData>();
-                if (details == null) { return (false, returnList); }
-                details.InitializeJsonData(logger);
-                details.output(2);
-                foreach (var product in details.products)
-                {
-                    XboxTitleDetailsData data = new XboxTitleDetailsData();
-
-
-                    foreach (var displaySku in details.products)
-                    {
-
-                    }
-                    foreach (var localProp in product.localizedProperties)
-                    {
-                        data.productTitle = localProp.productTitle;
-                    }
-                    data.productID = product.productId;
-                    data.groupID = product.properties.ProductGroupId;
-                    data.groupName = product.properties.ProductGroupName;
-
-                    foreach (var marketProperty in product.marketProperties)
-                    {
-                        foreach (var relatedProduct in marketProperty.relatedProducts)
-                        {
-                            if (relatedProduct.relationshipType == "Bundle")
-                            {
-                                data.bundleIDs.Add(relatedProduct.relatedProductId);
-                            }
-                        }
-                    }
-                    bool foundID = false;
-                    //find the titleID
-                    foreach (var altID in product.alternateIds)
-                    {
-                        if (altID.idType == "XboxTitleId")
-                        {
-                            foundID = true;
-                            data.modernTitleID = altID.value;
-                        }
-                    }
-                    if (foundID == false)
-                    {
-
-                        logger.LogDebug("No Title ID found for " + data.productID);
-                        continue;
-                    }
-
-
-                    //valid data
-                    //data.outputData();
-
-                    //add to details queue
-                    if (data.groupName != null && data.groupID != null)
-                    {
-                        if (data.groupName.Length > 60)
-                            logger.LogDebug(data.groupName);
-                        await groupDetailsLock.WaitAsync();
-                        groupDetailsQueue.TryAdd(data.groupID, data);
-                        groupDetailsLock.Release();
-                    }
-
-                    var titleDetails = mapper.Map<DataBaseSchemas.XboxSchema.TitleDetailTable>(product);
-                    //await dbManager.InsertXboxQueueAsync(Tables.XboxProductIds, data, CRUD.Create);
-                    //await dbManager.InsertXboxQueueAsync(Tables.XboxTitleDetails, data, CRUD.Create);
-                    returnList.Add(data);
-                    await dbManager.EnqueQueueAsync([schema.ProductIDs, schema.TitleDetails, schema.GameBundles], data, CRUD.Create);
-
-                    await dbManager.EnqueQueueAsync(schema.GameTitles, data, CRUD.Update);
-                }
-                //details.output(9);
-
-                return (true, returnList);
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-                throw;
-            }
-        }
-        private async Task<(bool, List<ITableData>)> parseMarketDetailsAsyncOld(string json)
-        {
-            try
-            {
-
-                XboxMarketDetails? details = JsonConvert.DeserializeObject<XboxMarketDetails>(json);
-                List<ITableData> returnList = new List<ITableData>();
-                if (details == null) { return (false, new List<ITableData>()); }
-                foreach (var product in details.products)
-                {
-                    XboxGameMarketData data = new XboxGameMarketData();
-
-#if false
-                    if (!product.IsSandboxedProduct)
-                    {
-                        logger.LogDebug("Product Not Sandboxed");
-                        continue;
-                    }
-                    else if (product.SandboxId != "RETAIL")
-                    {
-                        logger.LogDebug("Product not Retail");
-                        continue;
-                    } 
-#endif
-
-                    //check to see if info is null
-                    if (product.localizedProperties == null) continue;
-                    if (product.marketProperties == null) continue;
-                    if (product.properties == null) continue;
-                    if (product.displaySkuAvailabilities == null) continue;
-
-                    if (product.alternateIds == null) continue;
-
-                    data.productID = product.productId;
-
-
-                    //handle local. Should only be one but idk
-                    if (product.localizedProperties.Count > 1) logger.LogDebug("\n\n\nMultiple Local Properties??\n\n");
-                    foreach (var localProp in product.localizedProperties)
-                    {
-                        data.devName = localProp.developerName;
-                        data.pubName = localProp.publisherName;
-                        data.productTitle = localProp.productTitle;
-
-                        if (localProp.Images != null)
-                            foreach (var image in localProp.Images)
-                            {
-                                //find the poster image
-                                if (image == null) continue;
-                                if (image.imagePurpose == "Poster")
-                                {
-                                    data.posterImage = image.uri;
-                                }
-                            }
-                        //might add description later
-                    }
-
-
-                    if (data.posterImage == null)
-                    {
-                        logger.LogDebug($"{data.productID} has no poster image");
-                    }
-
-                    data.isDemo = product.properties.isDemo;
-                    //Only thing in market properties i might need is release date
-#if true
-                    foreach (var marketProperty in product.marketProperties)
-                    {
-                        if (DateTime.TryParse(marketProperty.OriginalReleaseDate, out var origRelease))
-                        {
-                            data.releaseDate = origRelease;
-                        }
-                    }
-#endif
-                    //valid data
-                    //data.outputData();
-
-
-                    data.purchasable = false;
-                    foreach (var displaySkuAvail in product.displaySkuAvailabilities)
-                    {
-                        //Im only going to deal with the first purchasable sku i find. if its only gamepass, ill add null's to the prices
-                        if (data.purchasable)
-                            break;
-                        //Sku suff if i need it
-
-
-                        //availabilities
-                        int validAvails = 0;
-                        foreach (var availability in displaySkuAvail.availabilities)
-                        {
-                            //find the date for each sku;
-                            //if no date range is give, idk what to do with it.
-                            if (availability.conditions.startDate == null || availability.conditions.endDate == null) continue;
-
-
-                            //Get at the first date.
-                            if (data.startDate == DateTime.MinValue)
-                                if (DateTime.TryParse(availability.conditions.startDate, out var start))
-                                    data.startDate = start;
-
-                            if (data.endDate == DateTime.MinValue)
-                                if (DateTime.TryParse(availability.conditions.endDate, out var end))
-                                    data.endDate = end;
-
-                            //if you cant purchase it, this avail is pointless
-                            //There are some gamepass games that cant be purchased though, I will have to deal with that later.
-                            if (!availability.actions.Contains("Purchase") && !data.purchasable)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                //most likely a gamepass game or some other service
-                                if (availability.remediationRequired == true)
-                                {
-                                    continue;
-                                }
-                                //This sku should be purchasable
-                                else
-                                {
-
-                                    if (DateTime.TryParse(availability.conditions.startDate, out var start))
-                                        data.startDate = start;
-
-                                    if (DateTime.TryParse(availability.conditions.endDate, out var end))
-                                        data.endDate = end;
-
-                                    //The current sale is ongoing.
-                                    if (DateTime.UtcNow > data.startDate && DateTime.UtcNow < data.endDate)
-                                    {
-                                        //The current sku is purchasable
-                                        if (availability.orderManagementData.price.currencyCode != null)
-                                            data.currencyCode = availability.orderManagementData.price.currencyCode;
-
-                                        if (++validAvails > 1)
-                                        {
-                                            logger.LogDebug("multiple skus valid??");
-                                        }
-                                        data.purchasable = true;
-                                        data.ListPrice = availability.orderManagementData.price.listPrice;
-                                        data.msrp = availability.orderManagementData.price.msrp;
-
-                                        if (availability.conditions.clientConditions.allowedPlatforms != null)
-                                            foreach (var platform in availability.conditions.clientConditions.allowedPlatforms)
-                                                data.platforms.Add(platform.platformName);
-                                        //Only finding the first skew
-                                        break;
-                                    }
-
-                                }
-                            }
-                        }
-                    }
-
-                    if (!data.purchasable && !product.IsSandboxedProduct)
-                    {
-                        logger.LogDebug($"{data.productID} is not purchasable and not sandboxed");
-                    }
-                    returnList.Add(data);
-                    await dbManager.EnqueQueueAsync(schema.MarketDetails, data, CRUD.Create);
-                }
-                //details.output(9);
-
-                return (true, returnList);
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-                return (false, new List<ITableData>());
-            }
-        }
-
-        private async Task<(bool, List<ITableData>)> parsePlayerHistoryAsyncOld(string json)
-        {
-            try
-            {
-                //JObject oo = JObject.Parse(json);
-                // logger.LogDebug(oo.ToString());
-
-                if (xboxSettings.outputSettings.outputDebug)
-                    logger.LogDebug("Parsing Player history");
-                List<ITableData> returnList = new List<ITableData>();
-
-                XboxTitleHistory? history = JsonConvert.DeserializeObject<XboxTitleHistory>(json);
-                if (history == null) return (false, returnList);
-                history.InitializeJsonData(logger);
-                foreach (var title in history.titles.Where(title => title.modernTitleId != null && !title.devices.Contains("Win32")))
-                {
-
-
-                    XboxGameTitleData titleData = new XboxGameTitleData();
-                    titleData.titleID = title.titleId;
-                    titleData.titleName = title.name;
-                    titleData.modernTitleID = title.modernTitleId;
-                    titleData.displayImage = title.displayImage;
-                    titleData.isGamePass = title.gamePass.isGamePass;
-                    titleData.devices = title.devices;
-
-
-                    var gameTitle = mapper.Map<DataBaseSchemas.XboxSchema.GameTitleTable>(title);
-                    await titleDataLock.WaitAsync();
-                    titleDataQueue.TryAdd(titleData.modernTitleID, titleData);
-                    titleDataLock.Release();
-
-
-                    returnList.Add(titleData);
-                }
-                // await dbManager.processQueueAsync();
-                //history.output(5);
-
-
-                return (true, returnList);
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-                throw;
-            }
-        }
-        public async Task scanAllPlayerHistoriesOld(int maxCalls = 5000)
-        {
-            try
-            {
-                if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.profile)) { return; }
-
-                var now = DateTime.UtcNow;
-                var refreshTime = now - xboxSettings.userProfileUpdateFrequency;
-                using var connection = new MySqlConnection(dbManager.connectionString);
-                await connection.OpenAsync();
-
-                var table = schema.UserProfiles;
-                if (await dbManager.validTableAsync(table))
-                {
-                    string sql = $@"Select xuid from {table.fullPath()} 
-                     where lastScanned < @refreshTime or lastScanned IS null 
-                     order by lastScanned";
-                    var xuids = new List<string>();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Connection = connection;
-                        command.CommandText = sql;
-                        command.Parameters.AddWithValue("refreshTime", refreshTime);
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                xuids.Add(reader.GetString(0));
-                            }
-                        }
-
-                    }
-
-                    await connection.CloseAsync();
-
-                    int currentCalls = 0;
-                    foreach (var xuid in xuids)
-                    {
-                        if (++currentCalls > maxCalls)
-                        {
-                            logger.LogDebug("Reached Max call paramater");
-                            break;
-                        }
-                        try
-                        {
-
-                            if (apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.profile))
-                            {
-                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.profile);
-                                string historyRespone = await CallAPIAsync((int)APICalls.playerTitleHistory, xuid);
-                                await ParseJsonAsyncOld((int)APICalls.playerTitleHistory, historyRespone);
-                                //await dbManager.EnqueueXboxQueueAsync(Tables.XboxUserProfiles, new XboxUpdateScannedData() { ID = xuid}, CRUD.Update);
-                                await dbManager.EnqueQueueAsync(Database_structure.Xbox.UserProfiles, new XboxUpdateScannedData() { ID = xuid }, CRUD.Update);
-                            }
-                            else
-                            {
-                                logger.LogDebug("Cannot request for player history");
-                                break;
-                            }
-                        }
-                        catch { logger.LogDebug("Failed to call for " + xuid); }
-                    }
-
-
-
-                    await processQueueAsync(titleDataQueue);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-            }
-        }
-        public async Task scanAllGameTitlesOld(int maxCalls = 5000)
-        {
-            if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.title)) { return; }
-            try
-            {
-
-                var now = DateTime.UtcNow;
-                var refreshTime = DateTime.UtcNow - xboxSettings.userProfileUpdateFrequency;
-                using var connection = new MySqlConnection(dbManager.connectionString);
-
-
-                var table = schema.GameTitles;
-                if (await dbManager.validTableAsync(table))
-                {
-                    await connection.OpenAsync();
-                    string sql = $@"Select modernTitleId from {table.fullPath()} 
-                     where lastScanned < @refreshTime or lastScanned IS null 
-                     order by lastScanned";
-                    var modernTitleIds = new List<string>();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Connection = connection;
-                        command.CommandText = sql;
-                        command.Parameters.AddWithValue("refreshTime", refreshTime);
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                modernTitleIds.Add(reader.GetString(0));
-                            }
-                        }
-
-                    }
-
-                    await connection.CloseAsync();
-
-
-                    int count = 0;
-                    foreach (var modernTitleId in modernTitleIds)
-                    {
-                        if (++count > maxCalls)
-                        {
-                            logger.LogDebug("Reached Max call paramater");
-                            break;
-                        }
-                        try
-                        {
-                            if (apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.title))
-                            {
-                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.title);
-                                string historyRespone = await CallAPIAsync((int)APICalls.gameTitle, modernTitleId);
-                                if (historyRespone == httpRequestFail) continue;
-                                var (success, tableData) = await ParseJsonAsyncOld((int)APICalls.gameTitle, historyRespone);
-
-                                if (success)
-                                {
-                                    await dbManager.EnqueQueueAsync(schema.GameTitles, new XboxUpdateScannedData() { ID = modernTitleId }, CRUD.Update);
-                                }
-                            }
-                            else
-                            {
-                                logger.LogDebug("Cannot Request for Title Details.");
-                                break;
-                            }
-                        }
-                        catch
-                        {
-                            logger.LogDebug("Failed to call for " + modernTitleId);
-                        }
-                    }
-
-                    //await dbManager.processQueueAsync();
-
-
-                    //add group data to db
-                    await processQueueAsync(groupDetailsQueue);
-
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-
-            }
-        }
-        public async Task scanAllProductIdsOld(int maxCalls = 5000)
-        {
-            if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) { return; }
-            try
-            {
-                var now = DateTime.UtcNow;
-                var refreshTime = DateTime.UtcNow - xboxSettings.marketDetailsUpdateFrequency;
-                using var connection = new MySqlConnection(dbManager.connectionString);
-
-
-                var table = schema.ProductIDs;
-                if (await dbManager.validTableAsync(table))
-                {
-                    //get the list of ids needing to be updated
-                    await connection.OpenAsync();
-                    string sql = $@"Select productID from {table.fullPath()}
-                     where lastScanned < @refreshTime or lastScanned IS null
-                     order by lastScanned";
-                    var productIDS = new List<string>();
-
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Connection = connection;
-                        command.CommandText = sql;
-                        command.Parameters.AddWithValue("refreshTime", refreshTime);
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                productIDS.Add(reader.GetString(0));
-                            }
-                        }
-
-                    }
-
-                    await connection.CloseAsync();
-
-
-                    //THe loop
-                    int currentCount = 0;
-                    var paramaters = new Dictionary<string, object>();
-                    var currentProductIds = new List<string>();
-                    while (productIDS.Count > 0)
-                    {
-                        if (currentCount >= maxCalls)
-                        {
-                            logger.LogDebug("Reached max call limit:");
-                            return;
-                        }
-                        if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) return;
-                        currentProductIds.Add(productIDS[0]);
-                        productIDS.RemoveAt(0);
-                        if (currentProductIds.Count == xboxSettings.maxProductsForMarketDetails || productIDS.Count == 0)
-                        {
-
-                            try
-                            {
-                                apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.market);
-                                paramaters.Add("products", currentProductIds);
-                                string historyRespone = await CallAPIAsync((int)APICalls.marketDetails, JsonConvert.SerializeObject(paramaters));
-
-                                if (historyRespone == httpRequestFail)
-                                {
-                                    currentProductIds.Clear();
-                                    paramaters.Clear();
-                                    continue;
-                                }
-                                var (success, returnList) = await ParseJsonAsyncOld((int)APICalls.marketDetails, historyRespone);
-                                if (!apiTracker.canRequest(XblAPITracker.hourlyAPICallsRemaining.market)) return;
-                                if (success)
-                                {
-                                    foreach (var id in currentProductIds)
-                                    {
-                                        await dbManager.EnqueQueueAsync(schema.ProductIDs, new XboxUpdateScannedData { ID = id }, CRUD.Update);
-                                    }
-                                }
-                                currentProductIds.Clear();
-                                paramaters.Clear();
-                                ++currentCount;
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogDebug(ex.ToString());
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex.ToString());
-                throw;
-            }
-        }
-        #endregion
-
-#endif
 
         #region New Stuff
         public async override Task<(bool, ICollection<ITable>?)> ParseJsonAsync(int apiCall, string json)
@@ -887,6 +271,9 @@ namespace GameMarketAPIServer.Services
                     if (product.displaySkuAvailabilities == null) continue;
                     if (product.alternateIds == null) continue;
 
+                    //i dont feel like dealing with these
+                    if (product.localizedProperties.First().developerName.Count() > 80 || product.localizedProperties.First().publisherName.Count() > 80) continue;
+
 
                     var marketDetails = MappingProfile.MapXboxProductToMarketDetail(product);
                     returnList.Add(marketDetails);
@@ -932,6 +319,7 @@ namespace GameMarketAPIServer.Services
                             {
                                 apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.profile);
                                 string historyRespone = await CallAPIAsync((int)APICalls.playerTitleHistory, user.xuid);
+                                if (historyRespone == httpRequestFail) break;
                                 var (success, tables) = await ParseJsonAsync((int)APICalls.playerTitleHistory, historyRespone);
 
                                 if (!success || tables == null || !tables.Any()) continue;
@@ -1002,7 +390,7 @@ namespace GameMarketAPIServer.Services
                                 if (gameTitle == null) continue;
                                 apiTracker.makeRequest(XblAPITracker.hourlyAPICallsRemaining.title);
                                 string historyRespone = await CallAPIAsync(apiCall, gameTitle.modernTitleID);
-                                if (historyRespone == httpRequestFail) continue;
+                                if (historyRespone == httpRequestFail) break;
                                 var (success, tableData) = await ParseJsonAsync(apiCall, historyRespone);
 
                                 if (processGameTitleReturn(gameTitle, success, tableData))
@@ -1011,6 +399,19 @@ namespace GameMarketAPIServer.Services
                                     {
                                         if (table is XboxSchema.TitleDetailTable titleTable)
                                         {
+                                            if (productIDs.ContainsKey(titleTable.productID))
+                                                titleTable.ProductIDNavig = productIDs[titleTable.productID];
+                                            if (titleTable.GameBundles != null && titleTable.GameBundles.Any())
+                                            {
+                                                titleTable.GameBundles.ToList().ForEach(e =>
+                                                {
+                                                    e.TitleDetails = titleTable;
+                                                    if (productIDs.ContainsKey(e.relatedProductID))
+                                                        e.ProductIDNavig = productIDs[e.relatedProductID];
+                                                    else
+                                                        e.ProductIDNavig = new XboxSchema.ProductIDTable() { productID = e.relatedProductID};
+                                                });
+                                            }
                                             successfulList.Add(titleTable);
                                         }
                                     }
@@ -1083,7 +484,7 @@ namespace GameMarketAPIServer.Services
                                 {
                                     currentProductIds.Clear();
                                     paramaters.Clear();
-                                    continue;
+                                    break;
                                 }
 
 
@@ -1155,7 +556,6 @@ namespace GameMarketAPIServer.Services
                 if (table == null) continue;
 
                 table.ProductIDNavig = productIDs.Where(p => p.productID == table.productID).First();
-
                 successfulList.Add(table);
             }
             productIDs.Select(c => c.lastScanned = DateTime.UtcNow).ToList();

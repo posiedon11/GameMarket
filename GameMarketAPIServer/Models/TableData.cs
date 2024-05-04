@@ -8,13 +8,7 @@ namespace GameMarketAPIServer.Models
     {
         void outputData();
     };
-    public class AllTableData
-    {
-        public class Xbox
-        {
 
-        }
-    }
     class genericXboxData : ITableData
     {
         public string itemType { get; set; }

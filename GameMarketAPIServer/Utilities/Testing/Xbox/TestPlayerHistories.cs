@@ -51,7 +51,6 @@ namespace GameMarketAPIServer.Utilities.Testing.Xbox
         }
 
         [Fact]
-
         public async void TestPosiedon11()
         {
             string historyRespone = await mockAPICaller.Object.CallAPIAsync(apiCall, "2533274880644024");

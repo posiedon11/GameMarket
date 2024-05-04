@@ -16,6 +16,7 @@ using static SteamKit2.GC.CSGO.Internal.CGameServers_AggregationQuery_Response;
 using static GameMarketAPIServer.Models.DataBaseSchemas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
 
 namespace GameMarketAPIServer.Services
 {
@@ -127,7 +128,7 @@ namespace GameMarketAPIServer.Services
             titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase).ToLower().Trim();
             var delimiters = new string[] { "/", ",", "|", ";" };
             string pattern = @"\s*(,|\s)\s*(LLC|LTD|INC|S\.?A\.?|INC\.|CORPORATION|CORP|PTY\.?|L\.?P\.?|GMBH)\.?([\/,|;]\s*|$)\s*";
-            titleName = Regex.Replace(titleName, pattern, "", RegexOptions.IgnoreCase);
+            //titleName = Regex.Replace(titleName, pattern, "", RegexOptions.IgnoreCase);
 
             var normalDevelopers = new SortedSet<string>(developers.Select(dev => Regex.Replace(dev, pattern, "$3", RegexOptions.IgnoreCase)));
             var normalPublishers = new SortedSet<string>(publishers.Select(pub => Regex.Replace(pub, pattern, "$3", RegexOptions.IgnoreCase)));
@@ -149,8 +150,34 @@ namespace GameMarketAPIServer.Services
                 }
             }
         }
+        private void NormalizeSteam() 
+        {
+            string combinedRegExp = $"{string.Join("|", removeReg)}";
 
-        private void NormalizeSteam() { }
+            titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase).ToLower().Trim();
+
+            string pattern = @"\s*(,|\s)\s*(LLC|LTD|INC|S\.?A\.?|INC\.|CORPORATION|CORP|PTY\.?|L\.?P\.?|GMBH)\.?([\/,|;]\s*|$)\s*";
+            var delimiters = new string[] { "/", ",", "|", ";" };
+            var normalDevelopers = new SortedSet<string>(developers.Select(dev => Regex.Replace(dev, pattern, "$3", RegexOptions.IgnoreCase)));
+            var normalPublishers = new SortedSet<string>(publishers.Select(pub => Regex.Replace(pub, pattern, "$3", RegexOptions.IgnoreCase)));
+
+            developers.Clear();
+            publishers.Clear();
+            foreach (string normalDev in normalDevelopers)
+            {
+                foreach (string part in normalDev.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    developers.Add(part.Trim());
+                }
+            }
+            foreach (string normalPub in normalPublishers)
+            {
+                foreach (string part in normalPub.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    publishers.Add(part.Trim());
+                }
+            }
+        }
 
     };
 
@@ -291,6 +318,8 @@ namespace GameMarketAPIServer.Services
         }
 
     }
+
+
     public class GameMergerManager
     {
         private ILogger logger;
@@ -320,7 +349,7 @@ namespace GameMarketAPIServer.Services
 
 
         #region Old Stuff
-        public GameMergerManager( IOptions<MainSettings> settings, ILogger<GameMergerManager> logger,
+        public GameMergerManager(IOptions<MainSettings> settings, ILogger<GameMergerManager> logger,
             IServiceScopeFactory scopeFactory, IMapper mapper)
         {
             this.settings = settings.Value;
@@ -349,14 +378,8 @@ namespace GameMarketAPIServer.Services
 
                         var gameTitles = await dbService.SelectAll<XboxSchema.GameTitleTable>();
 
-
-                        //xboxTitles.Add(reader.GetString(0), new GamePlatformTitle(logger, Database_structure.Xbox) { titleName = reader.GetString(1) });
-
-
                         var context = dbService.getContext();
 
-                        var xtitles = context.xboxTitles
-                            .Include(xt => xt.TitleDetails).Where(xt => xt.lastScanned != null).ToList();
 
                         var titleQuery = context.xboxTitles?
                             .Where(gt => gt.lastScanned != null)
@@ -392,6 +415,7 @@ namespace GameMarketAPIServer.Services
                 {
                     xboxTitles = testTitles;
                 }
+
                 logger.LogTrace($"OriginalSize: {xboxTitles.Keys.Count()}");
                 logger.LogTrace($"Merged Size: {mergedTitles.Count()}");
 
@@ -565,39 +589,71 @@ namespace GameMarketAPIServer.Services
             }
 
         }
-        public async Task<Dictionary<string, List<int>>> MergeSteamGamesAsync()
+        public async Task<SortedSet<GamePlatformTitle>> MergeSteamGamesAsync(SortedDictionary<string, GamePlatformTitle>? testTitles = null)
         {
 
             try
             {
-                Dictionary<string, List<int>> mergedSteam = new Dictionary<string, List<int>>();
+                SortedSet<GamePlatformTitle> mergedTitles = new SortedSet<GamePlatformTitle>(new GamePlatformTitleComparer());
 
                 //id / title
-                Dictionary<int, string> steamTitles = new Dictionary<int, string>();
+                //Dictionary<int, string> steamTitles = new Dictionary<int, string>();
+                SortedDictionary<string, GamePlatformTitle> steamTitles = new SortedDictionary<string, GamePlatformTitle>();
 
-                using var scope = scopeFactory.CreateScope();
+                if (testTitles == null)
                 {
-                    var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+                    using var scope = scopeFactory.CreateScope();
+                    {
+                        var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
 
-                    var context = dbService.getContext();
+                        var context = dbService.getContext();
 
-                    var steamTitlesQuery = context.steamAppDetails
-                        .Where(sad => sad.appType == "game")
-                        .Include(ds=>ds.Developers)
-                        .Include(pb=>pb.Publishers)
-                        .ToList();
+                        var titleQuery = context.steamAppDetails
+                            .Where(sad => sad.appType == "game")
+                            .Include(ds => ds.Developers)
+                            .Include(pb => pb.Publishers)
+                            .ToList();
+
+                        if (titleQuery != null && titleQuery.Any())
+                        {
+                            foreach (var title in titleQuery)
+                            {
+                                var titleID = title.appID;
+
+                                var newPlatformTitle = new GamePlatformTitle(logger, Database_structure.Steam) { titleName = title.appName };
+                                bool valid = false;
+                                if(title.Developers!= null && title.Developers.Any())
+                                {
+                                    title.Developers.Select(d=>d.developer).ToList().ForEach(d=>newPlatformTitle.developers.Add(d) );
+                                    valid = true;
+                                }
+                                if (title.Publishers != null && title.Publishers.Any())
+                                {
+                                    title.Publishers.Select(d => d.publisher).ToList().ForEach(p => newPlatformTitle.publishers.Add(p));
+                                    valid = true;
+                                }
+                                if (valid)
+                                    steamTitles.Add(titleID.ToString(), newPlatformTitle);
+                            }
+                        }
+                    }
                 }
+                else
+                {
+                    steamTitles = testTitles;
+                }
+
 
                 string combinedRegExp = $"";
                 const int scoreThreshold1 = 95;
                 const int scoreThreshold2 = 90;
                 const int scoreThreshold3 = 80;
 
-
-                foreach (var appId in steamTitles.Keys)
+                //do stuff for each title
+                foreach (var title in steamTitles.Values)
                 {
-                    string titleName = steamTitles[appId];
-
+                    string titleName = title.titleName;
+                    title.Normalize();
 
                     //replace stuff
                     titleName = Regex.Replace(titleName, "\\s+|[-]", " ", RegexOptions.IgnoreCase);
@@ -606,17 +662,18 @@ namespace GameMarketAPIServer.Services
                     titleName = Regex.Replace(titleName, combinedRegExp, "", RegexOptions.IgnoreCase);
 
                     titleName = titleName.ToLower().Trim();
-
-                    //after normalizing the titles for xbox games.
-                    if (!mergedSteam.ContainsKey(titleName))
-                        mergedSteam[titleName] = new List<int>();
-                    mergedSteam[titleName].Add(appId);
-
-                    //var topMatches = Process.ExtractTop(titleName, mergedSteam.Keys.ToList(), scorer: ScorerCache.Get<DefaultRatioScorer>(), limit: 1);
-
                 }
 
-                return mergedSteam;
+
+                //add to merged
+                foreach (var titleID in steamTitles.Keys)
+                {
+                    var title = steamTitles[titleID];
+                    title.ids.Add(titleID);
+                    mergedTitles.Add(title);
+                }
+
+                return mergedTitles;
             }
             catch (Exception ex)
             {
@@ -624,19 +681,21 @@ namespace GameMarketAPIServer.Services
             }
         }
 
+
         public async Task mergeToGameMarket(ISchema mergeSchema, SortedDictionary<string, GamePlatformTitle>? testTitles = null)
         {
             try
             {
                 SortedSet<GamePlatformTitle> gameMergeTitles = new SortedSet<GamePlatformTitle>();
                 SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
-
+                logger.LogInformation($"Starting GameMerger for :  {mergeSchema.GetName()}");
                 switch (mergeSchema)
                 {
                     case DataBaseSchemas.XboxSchema:
                         gameMergeTitles = await MergeXboxGamesAsync(testTitles);
                         break;
                     case DataBaseSchemas.SteamSchema:
+                        gameMergeTitles = await MergeSteamGamesAsync(testTitles);
                         break;
 
                     //Cant merge a gamemarket game
@@ -649,7 +708,7 @@ namespace GameMarketAPIServer.Services
                     logger.LogDebug("Titles to merge is empty");
                     return;
                 }
-
+                logger.LogDebug($"Titles to merge: {gameMergeTitles.Count()}");
                 using var scope = scopeFactory.CreateScope();
                 {
                     var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();

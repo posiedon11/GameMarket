@@ -179,12 +179,12 @@ namespace GameMarketAPIServer.Services
         }
         public void outputRemainingRequests()
         {
-            logger.LogInformation($@"Max Calls: {maxHourlyAPIRequests}" +
-            "Remaing Calls: {remainingAPIRequests}\n" +
-            "Profile calls Remaining:  {hourlyProfileRemaining}.   Percentage of Max:  {xbSettings.hourlyProfileRequestPercent * 100}%\n" +
-            "Market calls Remaining:  {hourlyMarketRemaining}.   Percentage of Max:  {xbSettings.hourlyMarketRequestPercent * 100}%\n" +
-            "Title calls Remaining:  {hourlyTitleRemaining}.   Percentage of Max:  {xbSettings.hourlyTitleRequestPercent * 100} %\n" +
-            "Extra calls Remaining:  {hourlyExtraRemaining}.   Percentage of Max:  {Math.Round(1 - xbSettings.hourlyProfileRequestPercent - xbSettings.hourlyMarketRequestPercent - xbSettings.hourlyTitleRequestPercent) * 100} %\n\n");
+            logger.LogInformation($"Max Calls: {maxHourlyAPIRequests}\n" +
+            $"Remaing Calls: {remainingAPIRequests}\n" +
+            $"Profile calls Remaining:  {hourlyProfileRemaining}.   Percentage of Max:  {xbSettings.hourlyProfileRequestPercent * 100}%\n" +
+            $"Market calls Remaining:  {hourlyMarketRemaining}.   Percentage of Max:  {xbSettings.hourlyMarketRequestPercent * 100}%\n" +
+            $"Title calls Remaining:  {hourlyTitleRemaining}.   Percentage of Max:  {xbSettings.hourlyTitleRequestPercent * 100} %\n" +
+            $"Extra calls Remaining:  {hourlyExtraRemaining}.   Percentage of Max:  {Math.Round(1 - xbSettings.hourlyProfileRequestPercent - xbSettings.hourlyMarketRequestPercent - xbSettings.hourlyTitleRequestPercent) * 100} %\n\n");
         }
         public void setRemaingCalls(int value)
         {
