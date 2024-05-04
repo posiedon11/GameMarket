@@ -141,6 +141,7 @@ namespace GameMarketAPIServer.Controllers
                                         .ThenInclude(pp=> pp.ProductPlatforms)
                     .Include(gt => gt.SteamLinks)
                         .ThenInclude(sl => sl.AppDetails)
+                        .ThenInclude(Ad=>Ad.Platforms)
                     .Select(gt => new GameMarketListDTO
                     {
                         GameID = gt.gameID,
