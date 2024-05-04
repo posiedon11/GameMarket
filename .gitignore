@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
+#MyFiles
+/recovered_files/
+/GameMarketAPIServer/JsonFiles
+/GameMarketAPIServer/sqlQueries
