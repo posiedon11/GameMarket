@@ -76,8 +76,18 @@ var mergerManager = app.Services.GetRequiredService<GameMergerManager>();
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 lifetime.ApplicationStarted.Register( async () =>
 {
-   //xblManager.Start();
-    //stmManager.Start();
+    if (mainSettings.ManagerSettings.runXbox)
+    {
+        xblManager.Start();
+    }
+    if (mainSettings.ManagerSettings.runSteam)
+    {
+        stmManager.Start();
+    }
+    if (mainSettings.ManagerSettings.runGameMarket)
+    {
+        mergerManager.Start();
+    }
     //await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
     //settings.xboxSettings.xblAPIKey = builder.Configuration["MyApiKeys:XblAPIKey"];
     //settings.steamSettings.apiKey = builder.Configuration["MyApiKeys:SteamWebAPIKey"];
@@ -93,6 +103,23 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+if (app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    context.Database.Migrate();
+
+    if (!context.xboxUsers.Any())
+    {
+        var dbService = scope.ServiceProvider.GetRequiredService<DataBaseService>();
+        await dbService.InsertDefaultXboxUsers();
+    }
 }
 
 app.UseCors("AllowAll");

@@ -20,6 +20,7 @@ using Microsoft.Extensions.FileSystemGlobbing.Internal;
 
 namespace GameMarketAPIServer.Services
 {
+    #region GameTitleClasses
 
     public class GameTitle
     {
@@ -139,18 +140,18 @@ namespace GameMarketAPIServer.Services
             {
                 foreach (string part in normalDev.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    developers.Add(part.Trim());
+                    developers.Add(part.Trim().ToLower());
                 }
             }
             foreach (string normalPub in normalPublishers)
             {
                 foreach (string part in normalPub.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    publishers.Add(part.Trim());
+                    publishers.Add(part.Trim().ToLower());
                 }
             }
         }
-        private void NormalizeSteam() 
+        private void NormalizeSteam()
         {
             string combinedRegExp = $"{string.Join("|", removeReg)}";
 
@@ -167,20 +168,19 @@ namespace GameMarketAPIServer.Services
             {
                 foreach (string part in normalDev.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    developers.Add(part.Trim());
+                    developers.Add(part.Trim().ToLower());
                 }
             }
             foreach (string normalPub in normalPublishers)
             {
                 foreach (string part in normalPub.Split(delimiters, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    publishers.Add(part.Trim());
+                    publishers.Add(part.Trim().ToLower());
                 }
             }
         }
 
     };
-
     public class GameMarketTitle : GameTitle
     {
         public UInt32 gameID { get; private set; }
@@ -320,6 +320,10 @@ namespace GameMarketAPIServer.Services
     }
 
 
+    #endregion
+
+
+
     public class GameMergerManager
     {
         private ILogger logger;
@@ -348,7 +352,10 @@ namespace GameMarketAPIServer.Services
         };
 
 
-        #region Old Stuff
+        protected bool running = false;
+        protected CancellationTokenSource mainCTS = new CancellationTokenSource();
+        protected Task mainTask;
+
         public GameMergerManager(IOptions<MainSettings> settings, ILogger<GameMergerManager> logger,
             IServiceScopeFactory scopeFactory, IMapper mapper)
         {
@@ -358,7 +365,52 @@ namespace GameMarketAPIServer.Services
             this.scopeFactory = scopeFactory;
         }
 
-        #endregion
+        public void Start()
+        {
+            running = true;
+
+            logger.LogTrace($"MergerManager is starting");
+            mainTask = Task.Run(RunAsync);
+        }
+
+
+        public void Stop()
+        {
+            running = false;
+            mainTask?.Wait();
+        }
+        protected async Task RunAsync()
+        {
+            try
+            {
+                while (running && !mainCTS.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await mergeToGameMarket(DataBaseSchemas.Xbox);
+                        await mergeToGameMarket(DataBaseSchemas.Steam);
+
+                        logger.LogInformation("Game Merger will merge again in 1 hour");
+                        await Task.Delay(TimeSpan.FromHours(1));
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.ToString());
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
 
 
         #region newstuff
@@ -622,9 +674,9 @@ namespace GameMarketAPIServer.Services
 
                                 var newPlatformTitle = new GamePlatformTitle(logger, Database_structure.Steam) { titleName = title.appName };
                                 bool valid = false;
-                                if(title.Developers!= null && title.Developers.Any())
+                                if (title.Developers != null && title.Developers.Any())
                                 {
-                                    title.Developers.Select(d=>d.developer).ToList().ForEach(d=>newPlatformTitle.developers.Add(d) );
+                                    title.Developers.Select(d => d.developer).ToList().ForEach(d => newPlatformTitle.developers.Add(d));
                                     valid = true;
                                 }
                                 if (title.Publishers != null && title.Publishers.Any())
@@ -686,6 +738,7 @@ namespace GameMarketAPIServer.Services
         {
             try
             {
+                logger.LogInformation($"Merging {mergeSchema.ToString()}");
                 SortedSet<GamePlatformTitle> gameMergeTitles = new SortedSet<GamePlatformTitle>();
                 SortedSet<GameMarketTitle> marketTitles = new SortedSet<GameMarketTitle>(new GameMarketTitleComparer());
                 logger.LogInformation($"Starting GameMerger for :  {mergeSchema.GetName()}");
@@ -752,6 +805,15 @@ namespace GameMarketAPIServer.Services
                         bool matchFound = false;
                         if (devMatch || pubMatch)
                         {
+                            if (title.schema == Database_structure.Xbox)
+                            {
+                                if (title.titleName=="borderlands 3")
+                                title.titleName = title.titleName.Replace("SEJ_", "");
+                            }
+                            if (title.ids.Count > 1)
+                            {
+                                logger.LogDebug($"Multiple IDs for: {title.titleName}");
+                            }
                             var matchList = marketTitles.Where(gt => !gt.isSequel(title.titleName) &&
                                 Fuzz.Ratio(gt.titleName, title.titleName) > 90)
                                 .OrderByDescending(gt => Fuzz.Ratio(gt.titleName, title.titleName));

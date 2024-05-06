@@ -31,71 +31,29 @@ namespace GameMarketAPIServer.Controllers
         }
 
 
-        //GET: api/<GameMarketController>/GetAll
-        //GET: api/<GameMarketController>/GetAll
-        [HttpGet("HJef")]
-        public string Get()
-        {
-            var temp = context.xboxTitles.First();
-            return temp.titleName.ToString();
-        }
-
         // GET: api/<GameMarketController>/342
-        [HttpGet("afdas")]
-        public ActionResult<IEnumerable<XboxSchema.GameTitleTable>> GetGameTitle()
-        {
-            var temp = context.xboxTitles
-                // .Where(gt => gt.TitleDetails != null && gt.TitleDetails.Count() > 0)
-                .Include(gt => gt.TitleDetails).ToList();
-            return temp;
-        }
-
-
         [HttpGet("FullMergedGames")]
-        public ActionResult<IEnumerable<GameMarketSchema.GameTitleTable>> GetFullMergedGames()
-        {
-            var temp = context.gameMarketTitles
-                .Include(gt => gt.Developers)
-                .Include(gt => gt.Publishers)
-                .Include(gt => gt.XboxLinks)
-                    .ThenInclude(xl => xl.XboxTitle)
-                        .ThenInclude(xt => xt.TitleDetails)
-                            .ThenInclude(pd => pd.ProductIDNavig)
-                                .ThenInclude(pid => pid.MarketDetails)
-                .Include(gt => gt.SteamLinks)
-                    .ThenInclude(sl => sl.AppDetails)
-                    .ToList();
-            return temp;
-        }
-
-        // GET: api/<GameMarketController>/342
-        [HttpGet("MergedGames")]
-        public ActionResult<IEnumerable<GameMarketDTO>> GetMergedGames()
+        public ActionResult<IEnumerable<GameMarketDTO>> GetFullMergedGames()
         {
             try
             {
-                var temp = context.gameMarketTitles
+                var query = context.gameMarketTitles.AsQueryable();
+                query = query
                     .Include(gt => gt.Developers)
-                    .Include(gt => gt.Publishers)
+                    .Include(gt => gt.Publishers);
+                query = query
                     .Include(gt => gt.XboxLinks)
                         .ThenInclude(xl => xl.XboxTitle)
                             .ThenInclude(xt => xt.TitleDetails)
                                 .ThenInclude(pd => pd.ProductIDNavig)
-                                    .ThenInclude(pid => pid.MarketDetails)
+                                    .ThenInclude(pid => pid.MarketDetails);
+                query = query
                     .Include(gt => gt.SteamLinks)
-                        .ThenInclude(sl => sl.AppDetails)
-                    .Select(gt => new GameMarketDTO
-                    {
-                        GameID = gt.gameID,
-                        GameTitle = gt.gameTitle,
-                        Developers = gt.Developers.Select(d => d.developer).ToList(),
-                        Publishers = gt.Publishers.Select(p => p.publisher).ToList(),
-                        XboxMarketDetails = gt.XboxLinks.SelectMany(xl => xl.XboxTitle.TitleDetails.Select(xx => xx.ProductIDNavig)).Select(gg => gg.MarketDetails).ToList(),
-                        SteamAppDetails = gt.SteamLinks.Select(s => s.AppDetails).ToList()
-                    })
-                    .ToList();
-                return Ok(temp);
-            } catch (Exception e)
+                        .ThenInclude(sl => sl.AppDetails);
+                var result = query.ToList();
+                return Ok(result);
+            }
+            catch (Exception e)
             {
                 logger.LogError(e.ToString());
                 return NoContent();
@@ -113,35 +71,47 @@ namespace GameMarketAPIServer.Controllers
                 var deviceList = devices?.Split(',');
 
                 var query = context.gameMarketTitles.AsQueryable();
-                
+
                 if (platformList != null && platformList.Any())
                 {
                     query = query.Where(gt =>
-                        (platformList.Contains("Xbox") && gt.XboxLinks!=null && gt.XboxLinks.Any()) ||
+                        (platformList.Contains("Xbox") && gt.XboxLinks != null && gt.XboxLinks.Any()) ||
                         (platformList.Contains("Steam") && gt.SteamLinks != null && gt.SteamLinks.Any()));
                 }
+
                 if (deviceList != null && deviceList.Any())
                 {
-                    query = query.Where(gt =>gt.XboxLinks.Any(xl=>xl.XboxTitle.TitleDevices.Any(td=>deviceList.Contains(td.device))) ||
-                        gt.SteamLinks.Any(sl=>sl.AppDetails.Platforms.Any(p=>deviceList.Contains(p.platform)))
+                    query = query.Where(gt => 
+                        gt.XboxLinks.Any(xl => xl.XboxTitle.TitleDevices.Any(td => deviceList.Contains(td.device))) ||
+                        gt.SteamLinks.Any(sl => sl.AppDetails.Platforms.Any(p => deviceList.Contains(p.platform)))
                     );
-                                           
-                }
 
+                }
                 //Need to add the genre and device filter, not implemented yet
-                if (query == null) return NoContent();
-                var temp = query
-                    .Include(gt => gt.Developers)
-                    .Include(gt => gt.Publishers)
+                //if (query == null) return NoContent();
+
+                //Base Query
+                query = query.Include(gt => gt.Developers)
+                        .Include(gt => gt.Publishers);
+
+
+                //Xbox Query
+                query = query
                     .Include(gt => gt.XboxLinks)
                         .ThenInclude(xl => xl.XboxTitle)
                             .ThenInclude(xt => xt.TitleDetails)
                                 .ThenInclude(pd => pd.ProductIDNavig)
                                     .ThenInclude(pid => pid.MarketDetails)
-                                        .ThenInclude(pp=> pp.ProductPlatforms)
+                                        .ThenInclude(pp => pp.ProductPlatforms);
+
+                var temp = query.ToList();
+                //steam Query
+                query = query
                     .Include(gt => gt.SteamLinks)
                         .ThenInclude(sl => sl.AppDetails)
-                        .ThenInclude(Ad=>Ad.Platforms)
+                        .ThenInclude(Ad => Ad.Platforms);
+
+                var result = query
                     .Select(gt => new GameMarketListDTO
                     {
                         GameID = gt.gameID,
@@ -151,7 +121,7 @@ namespace GameMarketAPIServer.Controllers
                         SteamPriceDetails = MappingProfile.MapToSteamPriceDTO(gt.SteamLinks.Select(s => s.AppDetails).ToList())
                     })
                     .ToList();
-                return Ok(temp);
+                return Ok(result);
             }
             catch (Exception e)
             {
@@ -162,32 +132,46 @@ namespace GameMarketAPIServer.Controllers
         }
 
         [HttpGet("MergedGames/{gameID}")]
-        public ActionResult<GameMarketTitleDTO> GetMergedGameDetails(UInt32 gameID = 3)
+        public ActionResult<GameMarketTitleDTO> GetMergedGameDetails(UInt32 gameID = 12806)
         {
             try
             {
-                var temp = context.gameMarketTitles.Where(g => g.gameID == gameID)
-                    .Include(gt => gt.Developers)
-                    .Include(gt => gt.Publishers)
+                var query = context.gameMarketTitles.AsQueryable().Where(g=>g.gameID==gameID);
+
+                //Base Query
+                query = query.Include(gt => gt.Developers)
+                        .Include(gt => gt.Publishers);
+
+                //Xbox Query
+                query = query
                     .Include(gt => gt.XboxLinks)
                         .ThenInclude(xl => xl.XboxTitle)
                             .ThenInclude(xt => xt.TitleDetails)
                                 .ThenInclude(pd => pd.ProductIDNavig)
                                     .ThenInclude(pid => pid.MarketDetails)
-                                        .ThenInclude(pp => pp.ProductPlatforms)
+                                        .ThenInclude(pp => pp.ProductPlatforms);
+
+                query = query
                     .Include(gt => gt.XboxLinks)
                         .ThenInclude(xl => xl.XboxTitle)
                             .ThenInclude(xt => xt.TitleDetails)
                                 .ThenInclude(xx => xx.GameBundles)
                                     .ThenInclude(pd => pd.ProductIDNavig)
                                         .ThenInclude(pid => pid.MarketDetails)
-                                            .ThenInclude(pp => pp.ProductPlatforms)
+                                            .ThenInclude(pp => pp.ProductPlatforms);
+
+
+                //steam Query
+                query = query
                     .Include(gt => gt.SteamLinks)
                         .ThenInclude(sl => sl.AppDetails)
-                            .ThenInclude(ad => ad.Platforms)
+                            .ThenInclude(ad => ad.Platforms);
+                query = query
                     .Include(gt => gt.SteamLinks)
                         .ThenInclude(sl => sl.AppDetails)
-                            .ThenInclude(ad => ad.Packeges)
+                            .ThenInclude(ad => ad.Packeges);
+
+                var result = query
                     .Select(gt => new GameMarketTitleDTO
                     {
                         GameID = gt.gameID,
@@ -197,9 +181,9 @@ namespace GameMarketAPIServer.Controllers
                         XboxDetails = MappingProfile.MapToXboxDetailDTO(gt.XboxLinks.SelectMany(xl => xl.XboxTitle.TitleDetails).ToList()),
                         SteamDetails = MappingProfile.MapToSteamDetailDTO(gt.SteamLinks.Select(s => s.AppDetails).ToList())
                     }).FirstOrDefault();
-                    
-                if (temp!=null)
-                 return Ok(temp);
+
+                if (result != null)
+                    return Ok(result);
                 else return NoContent();
             }
             catch (Exception e)
@@ -209,34 +193,7 @@ namespace GameMarketAPIServer.Controllers
             }
 
         }
-        // GET api/<GameMarketController>/5
 
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-        //[HttpGet(Name ="Get all Games")]
-        //public async Task<ActionResult<IEnumerable<GameMarketTitle>>> GetTitles()
-        //{
-
-        //}
-        // POST api/<GameMarketController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<GameMarketController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<GameMarketController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+        
     }
 }

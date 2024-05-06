@@ -14,6 +14,7 @@ using AutoMapper;
 using System.Linq;
 using static GameMarketAPIServer.Models.DataBaseSchemas;
 using Microsoft.Extensions.Logging;
+using static GameMarketAPIServer.Utilities.SteamAllAppLastRun;
 namespace GameMarketAPIServer.Services
 {
     public class StmAPIManager : APIManager<DataBaseSchemas.SteamSchema>
@@ -53,9 +54,10 @@ namespace GameMarketAPIServer.Services
         {
             while (running && !mainCTS.Token.IsCancellationRequested)
             {
-                if (false)
-
+                var refreshTime = DateTime.UtcNow - stmSettings.allAppUpdateFrequency;
+                if (ShouldRun(refreshTime))
                 {
+                    SaveLastRun();
                     if (apiTracker.canRequest())
                     {
                         apiTracker.makeRequest();

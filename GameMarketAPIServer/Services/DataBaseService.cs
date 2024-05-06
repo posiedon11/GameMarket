@@ -249,12 +249,14 @@ namespace GameMarketAPIServer.Services
                         });
                         await context.BulkSynchronizeAsync(xboxLinks, options =>
                         {
+                            options.ColumnPrimaryKeyExpression = x => x.modernTitleID;
                             options.IncludeGraph = false;
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
                         });
                         await context.BulkSynchronizeAsync(steamLinks, options =>
                         {
                             options.IncludeGraph = false;
+                            options.ColumnPrimaryKeyExpression = x => x.appID;
                             options.ColumnSynchronizeDeleteKeySubsetExpression = x => x.gameID;
                         });
                     }

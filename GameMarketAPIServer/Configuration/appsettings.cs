@@ -70,12 +70,18 @@ namespace GameMarketAPIServer.Configuration
 
 
     }
-
+    public class ManagerSettings
+    {
+        public bool runXbox { get; set; }
+        public bool runSteam { get; set; }
+        public bool runGameMarket { get; set; }
+    }
     public class MainSettings
     {
         public SQLServerSettings sqlServerSettings { get; set; }
         public XboxSettings xboxSettings { get; set; }
         public SteamSettings steamSettings { get; set; }
+        public ManagerSettings ManagerSettings { get; set; }
 
 
         public bool outputHTTPResponse = false;

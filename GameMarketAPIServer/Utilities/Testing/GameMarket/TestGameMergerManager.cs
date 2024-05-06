@@ -184,7 +184,7 @@ namespace GameMarketAPIServer.Utilities.Testing.GameMarket
             }
 
             var me = await mergerManager.MergeXboxGamesAsync(null);
-
+            logger.LogInformation("dfas");
             //await mergerManager.MergeXboxGamesAsync(null);
         }
 
@@ -213,7 +213,7 @@ namespace GameMarketAPIServer.Utilities.Testing.GameMarket
             }
             //var me = await mergerManager.MergeXboxGamesAsync(temp);
             //await mergerManager.mergeToGameMarket(DataBaseManager.Schemas.xbox, temp);
-            await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox, temp);
+            await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
         }
 
         [Fact]

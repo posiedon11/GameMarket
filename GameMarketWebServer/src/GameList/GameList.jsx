@@ -7,7 +7,7 @@ import steamLogo from '../assets/Steam-Logo.png';
 import FiltersContext from '../FiltersContext';
 import DisplayGameTile from './DisplayGameTile';
 
-
+const apiURL = import.meta.env.VITE_API_BASE_URL;
 
 const GameList = () => {
     const [games, setGames] = useState([]); 
@@ -21,9 +21,10 @@ const GameList = () => {
             try {
                 const query = new URLSearchParams({
                     platforms: filters.platforms.join(','),
-                    genres: filters.genres.join(',')
+                    genres: filters.genres.join(','),
+                    devices: filters.devices.join(',')
                 }).toString();
-                const response = await fetch(`https://localhost:7046/api/GameMarket/MergedGamesList?${query}`);
+                const response = await fetch(`${apiURL}/MergedGamesList?${query}`);
                 const data = await response.json();
                 setGames(data);
             } catch (error) {

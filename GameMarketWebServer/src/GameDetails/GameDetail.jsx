@@ -10,7 +10,7 @@ import DisplaySideBar from './DisplaySideBar';
 import DisplayHeader from './DisplayHeader';
 import DisplayBody from './DisplayBody';
 
-
+const apiURL = import.meta.env.VITE_API_BASE_URL;
 
 const GameDetail = () => {
     const { gameID } = useParams();
@@ -21,7 +21,8 @@ const GameDetail = () => {
 
         const fetchData = async () => {
             try {
-                const response = await fetch(`https://localhost:7046/api/GameMarket/MergedGames/${gameID}`);
+                // eslint-disable-next-line no-undef
+                const response = await fetch(`${apiURL}/MergedGames/${gameID}`);
                 const data = await response.json();
                 setGameDetails(data); // Set the games state to the fetched data
                 setLoading(false); // Set loading to false as data has been loaded
