@@ -58,10 +58,26 @@ namespace GameMarketAPIServer.Models.Contexts
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options, IOptions<MainSettings> settings, ILogger<DatabaseContext> logger) : base(options)
         {
-            this.logger = logger;
-            this.settings = settings.Value;
-            connectionString = settings.Value.sqlServerSettings.getConnectionString();
-            logger.LogInformation(connectionString);
+            try
+            {
+                this.logger = logger;
+                this.settings = settings.Value;
+                if (settings.Value.sqlServerSettings.serverPassword == null || settings.Value.sqlServerSettings.serverPassword == "")
+                {
+                    throw new Exception("No password found in settings");
+                }
+                if (settings.Value.sqlServerSettings.serverUserName == null || settings.Value.sqlServerSettings.serverUserName == "")
+                {
+                    throw new Exception("No User Name found in settings");
+                }
+                this.connectionString = settings.Value.sqlServerSettings.getConnectionString();
+                connectionString = settings.Value.sqlServerSettings.getConnectionString();
+                logger.LogInformation(connectionString);
+            }catch (Exception e)
+            {
+                logger.LogError(e, "\nError in DatabaseContext Constructor");
+                throw;
+            }
 
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

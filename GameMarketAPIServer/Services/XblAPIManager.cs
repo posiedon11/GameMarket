@@ -93,7 +93,12 @@ namespace GameMarketAPIServer.Services
         {
             try
             {
-
+                if(xboxSettings.apiKey == null || xboxSettings.apiKey == "")
+                {
+                    logger.LogError("No API Key for Xbox");
+                    Stop();
+                    return;
+                }
                 await checkAPILimit();
                 int loopRan = 0;
                 Stopwatch apiResetStopWatch = new Stopwatch();

@@ -52,31 +52,44 @@ namespace GameMarketAPIServer.Services
 
         protected override async Task RunAsync()
         {
-            while (running && !mainCTS.Token.IsCancellationRequested)
+            try
             {
-                var refreshTime = DateTime.UtcNow - stmSettings.allAppUpdateFrequency;
-                if (ShouldRun(refreshTime))
+                if (settings.steamSettings.apiKey == null || settings.steamSettings.apiKey == "")
                 {
-                    SaveLastRun();
-                    if (apiTracker.canRequest())
+                    logger.LogError("No API Key for Steam");
+                    Stop();
+                    return;
+                }
+                while (running && !mainCTS.Token.IsCancellationRequested)
+                {
+                    var refreshTime = DateTime.UtcNow - stmSettings.allAppUpdateFrequency;
+                    if (ShouldRun(refreshTime))
                     {
-                        apiTracker.makeRequest();
-                        await GetAppList();
+                        SaveLastRun();
+                        if (apiTracker.canRequest())
+                        {
+                            apiTracker.makeRequest();
+                            await GetAppList();
+                        }
+
                     }
 
-                }
-
-                //Call and Parse All AppIds
+                    //Call and Parse All AppIds
 #if true
-                await ScanAllAppDetailsAsync(50000);
+                    await ScanAllAppDetailsAsync(50000);
 #endif
 
-                try
-                {
-                    logger.LogDebug("\n\nSteam manager Sleeping");
-                    await Task.Delay(TimeSpan.FromHours(1), mainCTS.Token);
+                    try
+                    {
+                        logger.LogDebug("\n\nSteam manager Sleeping");
+                        await Task.Delay(TimeSpan.FromHours(1), mainCTS.Token);
+                    }
+                    catch (TaskCanceledException) { break; }
                 }
-                catch (TaskCanceledException) { break; }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
             }
         }
         public override string GetUrlAsync(int apiCall, string paramater = "")

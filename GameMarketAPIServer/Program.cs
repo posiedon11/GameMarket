@@ -88,15 +88,6 @@ lifetime.ApplicationStarted.Register( async () =>
     {
         mergerManager.Start();
     }
-    //await mergerManager.mergeToGameMarket(DataBaseSchemas.Xbox);
-    //settings.xboxSettings.xblAPIKey = builder.Configuration["MyApiKeys:XblAPIKey"];
-    //settings.steamSettings.apiKey = builder.Configuration["MyApiKeys:SteamWebAPIKey"];
-    //Console.WriteLine(settings.xboxSettings.xblAPIKey);
-    // Console.WriteLine(settings.steamSettings.apiKey);
-    //settings.xboxSettings.outputRemainingRequests();
-
-    //xblManager.Start();
-    //await mergerManager.MergeXboxGamesAsyncOld(); 
 });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
